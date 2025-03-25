@@ -1,0 +1,128 @@
+/* Language-specific text styling */
+
+/* Right-to-left languages */
+[lang="ar"] {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Languages that may need larger line height for proper diacritics display */
+[lang^="ta"], [lang^="ml"], [lang^="kn"], [lang^="te"] {
+  line-height: 1.5;
+}
+
+/* Urdu - commonly right-to-left */
+[lang="ur"] {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Font sizing for languages with complex scripts */
+[lang^="hi"], [lang^="bn"], [lang^="pa"], [lang^="gu"], [lang^="mr"], 
+[lang^="ta"], [lang^="te"], [lang^="kn"], [lang^="ml"], [lang^="ur"] {
+  /* Slightly increase font size for better readability */
+  font-size: 1.05em;
+}
+
+/* Font family preferences for Indian languages */
+[lang^="hi"] {
+  font-family: 'Noto Sans Devanagari', sans-serif;
+}
+
+[lang^="bn"] {
+  font-family: 'Noto Sans Bengali', sans-serif;
+}
+
+[lang^="ta"] {
+  font-family: 'Noto Sans Tamil', sans-serif;
+}
+
+[lang^="te"] {
+  font-family: 'Noto Sans Telugu', sans-serif;
+}
+
+[lang^="gu"] {
+  font-family: 'Noto Sans Gujarati', sans-serif;
+}
+
+[lang^="kn"] {
+  font-family: 'Noto Sans Kannada', sans-serif;
+}
+
+[lang^="ml"] {
+  font-family: 'Noto Sans Malayalam', sans-serif;
+}
+
+[lang^="pa"] {
+  font-family: 'Noto Sans Gurmukhi', sans-serif;
+}
+
+[lang^="mr"] {
+  font-family: 'Noto Sans Devanagari', sans-serif;
+}
+
+/* Custom voice command chip styling */
+.voice-command-chip {
+  margin: 4px;
+  transition: all 0.2s ease-in-out;
+}
+
+.voice-command-chip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Language selector styling */
+.language-selector {
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+  padding: 8px;
+  transition: all 0.2s;
+}
+
+.language-selector:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.language-selector .language-icon {
+  margin-right: 8px;
+}
+
+.language-selector .language-name {
+  font-weight: 500;
+}
+
+.language-selector .native-name {
+  margin-left: 6px;
+  opacity: 0.7;
+}
+
+/* Accessibility widget language-specific elements */
+.accessibility-panel [lang] {
+  font-family: inherit; /* Override to ensure UI consistency */
+}
+
+/* Active listening indicator for speech recognition */
+.listening-active {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    background-color: rgba(0, 200, 0, 0.05);
+  }
+  50% {
+    background-color: rgba(0, 200, 0, 0.2);
+  }
+  100% {
+    background-color: rgba(0, 200, 0, 0.05);
+  }
+}
+
+/* Voice command tooltip */
+.voice-command-tooltip {
+  font-size: 0.85rem;
+  max-width: 200px;
+  line-height: 1.4;
+} 
