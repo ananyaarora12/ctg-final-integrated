@@ -54,6 +54,7 @@ import { calculateEventStatus } from '../events/page';
 import { Event, EventsByStatus } from '../../types/events';
 import EventIcon from '@mui/icons-material/Event';
 import StarIcon from '@mui/icons-material/Star';
+import axios from 'axios';
 
 // Interface matching the one in userSlice.ts
 interface UserProfile {
@@ -415,6 +416,10 @@ const ProfilePage = () => {
   // Modal handler for sending certificate via email
   const handleEmailCertificate = () => {
     // Simulate email sending
+    axios.post('http://localhost:5000/auth/send_attachment')
+    .then((response) => {
+      console.log(response);
+    })
     setTimeout(() => {
       alert(`Certificate for event ${selectedEvent} has been emailed to ${userProfile.email}`);
     }, 1000);

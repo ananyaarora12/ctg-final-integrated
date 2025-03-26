@@ -42,6 +42,7 @@ import Layout from '../../../components/layout/Layout';
 import { RootState } from '../../../redux/store';
 import { THEME_COLORS } from '../../../components/layout/Layout';
 import { Download as DownloadIcon, Edit as EditIcon } from '@mui/icons-material';
+import axios from 'axios';
 
 // Icons
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
@@ -178,6 +179,9 @@ export default function VolunteerManagementPage() {
     setTabValue(newValue);
   };
 
+  const handleSendMail = () => {
+     axios.post('http://localhost:5000/auth/send_evs')
+  }
   // Handle page change
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -298,6 +302,7 @@ export default function VolunteerManagementPage() {
               sx={{ width: 300 }}
             />
             <Button
+             onclick ={handleSendMail}
               variant="contained"
               startIcon={<DownloadIcon />}
               size="small"

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSelector, useDispatch } from 'react-redux';
+import axios from 'axios';
 import {
   Container,
   Box,
@@ -284,7 +285,7 @@ const EventRegistrationPage: React.FC = () => {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    axios.post('http://localhost:5000/events/register')
     if (!validateStep(activeStep)) {
       return;
     }

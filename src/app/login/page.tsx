@@ -32,6 +32,7 @@ import { useRouter } from 'next/navigation';
 import Layout from '../../components/layout/Layout';
 import { useDispatch } from 'react-redux';
 import { login } from '../../redux/slices/authSlice';
+import axios from 'axios';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -102,6 +103,9 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+    axios.post("http://localhost:5000/auth/login", {
+      email : "arora.anaya05@gmail.com" }
+    )
     
     try {
       const apiClient = (await import('../../utils/api')).default;
@@ -152,7 +156,9 @@ export default function LoginPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    
+    axios.post("http://localhost:5000/auth/login", {
+      email : "arora.anaya05@gmail.com" }
+    )
     // Basic validation
     if (password !== confirmPassword) {
       setError('Passwords do not match');
