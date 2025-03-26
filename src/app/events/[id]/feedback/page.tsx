@@ -27,7 +27,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt';
 import { format, parseISO } from 'date-fns';
 import Layout from '../../../../components/layout/Layout';
-import { sampleEvents } from '../../page';
+import { sampleEvents, calculateEventStatus } from '../../page';
 import { RootState } from '../../../../redux/store';
 import { updateUserPoints } from '@/utils/pointsCalculator';
 import { 
@@ -41,6 +41,7 @@ import {
   earnBadgeSuccess,
   earnBadgeFailure
 } from '@/redux/slices/userSlice';
+import EventRecommendations from '../../../../components/events/EventRecommendations';
 
 interface FeedbackFormData {
   role: 'participant' | 'volunteer' | 'both';
@@ -86,10 +87,13 @@ const EventFeedbackPage: React.FC = () => {
         setLoading(true);
         const eventId = params.id as string;
         
+        console.log("Feedback page: Fetching event details for ID:", eventId);
+        
         // Try to find the event in sampleEvents first (for backward compatibility)
         const sampleEvent = sampleEvents.find(e => e.id === eventId);
         
         if (sampleEvent) {
+          console.log("Feedback page: Found event in sample data:", sampleEvent);
           // Handle sample events as before
           setEvent(sampleEvent);
           setLoading(false);
@@ -99,31 +103,48 @@ const EventFeedbackPage: React.FC = () => {
         // If not found in sample events, fetch from API
         try {
           const apiClient = (await import('../../../../utils/api')).default;
+          console.log("Feedback page: Calling API with event ID:", eventId);
           const response = await apiClient.events.getEventById(eventId);
           
-          if (response.data.event) {
-            const apiEvent = response.data.event;
-            // Map API event to match our frontend structure
+          console.log("Feedback page: API response:", response);
+          
+          // Check if we have event data in the response
+          // Handle both possible response structures
+          const apiEvent = response?.data?.event || response?.data;
+          
+          if (apiEvent) {
+            console.log("Feedback page: Found event in API data:", apiEvent);
+            
+            // Safely extract values with fallbacks to prevent errors
+            const event_id = apiEvent.event_id || eventId;
+            const event_name = apiEvent.event_name || 'Event Name';
+            const description = apiEvent.description || '';
+            const start_date = apiEvent.start_date || new Date().toISOString();
+            const end_date = apiEvent.end_date || new Date().toISOString();
+            
+            // Map API event to match our frontend structure with fallbacks for all properties
             const formattedEvent = {
-              id: apiEvent.event_id,
-              title: apiEvent.event_name,
-              description: apiEvent.description,
-              image: apiEvent.event_image,
-              startDate: apiEvent.start_date,
-              endDate: apiEvent.end_date,
-              location: apiEvent.location,
-              category: apiEvent.category,
-              status: apiEvent.status.toLowerCase(),
-              participantsLimit: apiEvent.participant_limit,
-              participantLimit: apiEvent.participant_limit, // For backward compatibility
+              id: event_id,
+              title: event_name,
+              description: description,
+              startDate: start_date,
+              endDate: end_date,
+              location: apiEvent.location || 'TBD',
+              category: apiEvent.category || 'Other',
+              // Calculate real-time status based on dates
+              status: calculateEventStatus(start_date, end_date),
+              participantsLimit: apiEvent.participant_limit || 100,
+              participantLimit: apiEvent.participant_limit || 100, // For backward compatibility
               currentParticipants: apiEvent.participants ? apiEvent.participants.length : 0,
               participants: apiEvent.participants || [],
-              pointsAwarded: apiEvent.points_awarded,
-              hours: apiEvent.hours_required || 0,
+              pointsAwarded: apiEvent.points_awarded || 0,
+              hours: apiEvent.hours_required || 2,
             };
             
+            console.log("Feedback page: Formatted event:", formattedEvent);
             setEvent(formattedEvent);
           } else {
+            console.error("Feedback page: No event data found in API response:", response);
             setError('Event not found');
           }
         } catch (apiError) {
@@ -257,10 +278,10 @@ const EventFeedbackPage: React.FC = () => {
       setSubmitSuccess(true);
       setLoading(false);
       
-      // Redirect after a delay
-      setTimeout(() => {
+      // Don't redirect automatically
+      /* setTimeout(() => {
         router.push(`/events/${params.id}`);
-      }, 3000);
+      }, 3000); */
     } catch (err) {
       setError('Failed to submit feedback. Please try again.');
       setLoading(false);
@@ -334,6 +355,17 @@ const EventFeedbackPage: React.FC = () => {
               </Button>
             </Box>
           </Paper>
+          
+          {/* Event Recommendations */}
+          {event && (
+            <Box mt={4}>
+              <EventRecommendations 
+                currentEvent={event}
+                allEvents={[]}
+                maxRecommendations={1}
+              />
+            </Box>
+          )}
         </Container>
       </Layout>
     );

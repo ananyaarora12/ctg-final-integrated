@@ -21,7 +21,6 @@ export interface EventData {
   id: string;
   title: string;
   description: string;
-  image: string;
   startDate: string;
   endDate: string;
   location: string;
@@ -68,12 +67,6 @@ const EventCard: React.FC<EventCardProps> = ({ event, variant = 'default' }) => 
   if (variant === 'compact') {
     return (
       <Card sx={{ display: 'flex', mb: 2, height: 120 }}>
-        <CardMedia
-          component="img"
-          sx={{ width: 120 }}
-          image={event.image || 'https://source.unsplash.com/random/120x120?volunteer'}
-          alt={event.title}
-        />
         <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
           <CardContent sx={{ flex: '1 0 auto', py: 1 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -116,12 +109,6 @@ const EventCard: React.FC<EventCardProps> = ({ event, variant = 'default' }) => 
   
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <CardMedia
-        component="img"
-        height="180"
-        image={event.image || 'https://source.unsplash.com/random/400x200?volunteer'}
-        alt={event.title}
-      />
       <CardContent sx={{ flexGrow: 1 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
           <Typography gutterBottom variant="h6" component="div" sx={{ mb: 0 }}>

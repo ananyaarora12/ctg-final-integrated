@@ -70,6 +70,11 @@ export const userAPI = {
     return apiClient.get(`/users?${params.toString()}`);
   },
   getUserById: (userId) => apiClient.get(`/users/${userId}`),
+  getLeaderboard: (period = 'all-time') => {
+    const params = new URLSearchParams();
+    params.append('period', period);
+    return apiClient.get(`/users/leaderboard?${params.toString()}`);
+  },
 };
 
 export default {

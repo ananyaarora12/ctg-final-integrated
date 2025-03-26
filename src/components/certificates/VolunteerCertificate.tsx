@@ -255,16 +255,7 @@ const VolunteerCertificate: React.FC<VolunteerCertificateProps> = ({
             
             <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'space-between', pt: 4 }}>
               <Box sx={{ textAlign: 'center' }}>
-                <Box 
-                  component="img" 
-                  src="/images/signature.png" 
-                  alt="Signature"
-                  sx={{ 
-                    width: 120, 
-                    height: 'auto', 
-                    mb: 1,
-                  }}
-                />
+                
                 <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                   Event Organizer
                 </Typography>
@@ -273,28 +264,10 @@ const VolunteerCertificate: React.FC<VolunteerCertificateProps> = ({
                 </Typography>
               </Box>
               
-              <Box 
-                component="img" 
-                src="/images/certificate-seal.png" 
-                alt="Official Seal"
-                sx={{ 
-                  width: 100, 
-                  height: 100,
-                  objectFit: 'contain',
-                }}
-              />
+          
               
               <Box sx={{ textAlign: 'center' }}>
-                <Box 
-                  component="img" 
-                  src="/images/director-signature.png" 
-                  alt="Director Signature"
-                  sx={{ 
-                    width: 120, 
-                    height: 'auto', 
-                    mb: 1,
-                  }}
-                />
+                
                 <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                   Director
                 </Typography>

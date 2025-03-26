@@ -57,112 +57,56 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 const mockVolunteers = [
   {
     id: 1,
-    name: 'Ananya Sharma',
-    email: 'ananya.sharma@example.com',
+    name: 'John Volunteer',
+    email: 'john12@gmail.com',
     phone: '+91 9876543210',
-    joinDate: '15 Jan 2023',
+    joinDate: '23 March 2025',
     status: 'Active',
     events: 12,
-    hours: 48,
+    hours: 150,
     verified: true,
   },
   {
     id: 2,
-    name: 'Rahul Patel',
-    email: 'rahul.patel@example.com',
-    phone: '+91 9876543211',
-    joinDate: '20 Jan 2023',
+    name: 'ananya',
+    email: 'arora.ananya05@gmail.com',
+    phone: '+91 9990354943',
+    joinDate: '23 March 2025',
     status: 'Active',
-    events: 8,
-    hours: 32,
+    events: 4,
+    hours: 48,
     verified: true,
   },
   {
     id: 'vol3',
-    name: 'Nisha Mehta',
-    email: 'nisha.mehta@example.com',
+    name: 'Riya Jain',
+    email: 'riyajain1040@gmail.com',
     phone: '+91 7654321098',
-    joinDate: '2023-03-10',
+    joinDate: '24 March 2025',
     status: 'inactive',
     verified: true,
-    skills: ['Counseling', 'Translation', 'Event Planning'],
-    eventsAttended: 5,
-    hoursLogged: 20,
-    image: '',
+    eventsAttended: 3,
+    hoursLogged: 0,
   },
   {
     id: 'vol4',
-    name: 'Vikram Singh',
-    email: 'vikram.singh@example.com',
+    name: 'Namita Bhatt',
+    email: 'namitabhatt@gmail.com',
     phone: '+91 6543210987',
-    joinDate: '2023-04-05',
-    status: 'active',
-    verified: true,
-    skills: ['First Aid', 'Fundraising', 'Teaching'],
-    eventsAttended: 10,
-    hoursLogged: 40,
-    image: '',
-  },
-  {
-    id: 'vol5',
-    name: 'Priya Gupta',
-    email: 'priya.gupta@example.com',
-    phone: '+91 5432109876',
-    joinDate: '2023-05-12',
-    status: 'pending',
-    verified: false,
-    skills: ['Tech Support', 'Translation', 'Photography'],
-    eventsAttended: 0,
-    hoursLogged: 0,
-    image: '',
-  },
-  {
-    id: 'vol6',
-    name: 'Ajay Kumar',
-    email: 'ajay.kumar@example.com',
-    phone: '+91 4321098765',
-    joinDate: '2023-06-18',
-    status: 'active',
-    verified: true,
-    skills: ['Counseling', 'Teaching', 'Event Planning'],
-    eventsAttended: 7,
-    hoursLogged: 28,
-    image: '',
-  },
-  {
-    id: 'vol7',
-    name: 'Meera Desai',
-    email: 'meera.desai@example.com',
-    phone: '+91 3210987654',
-    joinDate: '2023-07-22',
-    status: 'active',
-    verified: true,
-    skills: ['Fundraising', 'First Aid', 'Tech Support'],
-    eventsAttended: 9,
-    hoursLogged: 36,
-    image: '',
-  },
-  {
-    id: 'vol8',
-    name: 'Sanjay Malhotra',
-    email: 'sanjay.malhotra@example.com',
-    phone: '+91 2109876543',
-    joinDate: '2023-08-30',
+    joinDate: '26 March 2025',
     status: 'inactive',
     verified: true,
-    skills: ['Photography', 'Translation', 'Event Planning'],
-    eventsAttended: 3,
-    hoursLogged: 12,
-    image: '',
+    eventsAttended: 1,
+    hoursLogged: 0,
   },
+
 ];
 
 // Stats for the dashboard
 const volunteerStats = [
-  { title: 'Total Volunteers', count: 246, icon: <PeopleAltIcon sx={{ fontSize: 40, color: THEME_COLORS.orange }} /> },
-  { title: 'Active Volunteers', count: 198, icon: <VerifiedIcon sx={{ fontSize: 40, color: '#4CAF50' }} /> },
-  { title: 'Pending Verification', count: 12, icon: <VerifiedIcon sx={{ fontSize: 40, color: '#2196F3' }} /> },
-  { title: 'Total Hours Logged', count: '1,245', icon: <VerifiedIcon sx={{ fontSize: 40, color: '#9C27B0' }} /> },
+  { title: 'Total Volunteers', count: 4, icon: <PeopleAltIcon sx={{ fontSize: 40, color: THEME_COLORS.orange }} /> },
+  { title: 'Active Volunteers', count: 2, icon: <VerifiedIcon sx={{ fontSize: 40, color: '#4CAF50' }} /> },
+  { title: 'Pending Verification', count: 0, icon: <VerifiedIcon sx={{ fontSize: 40, color: '#2196F3' }} /> },
 ];
 
 // Interface for TabPanel props
@@ -343,26 +287,6 @@ export default function VolunteerManagementPage() {
               View and manage all volunteers
             </Typography>
           </Box>
-          <Grid container spacing={2} sx={{ maxWidth: 600 }}>
-            <Grid item xs={4}>
-              <Paper sx={{ p: 1, textAlign: 'center' }}>
-                <Typography variant="h6">246</Typography>
-                <Typography variant="caption">Total</Typography>
-              </Paper>
-            </Grid>
-            <Grid item xs={4}>
-              <Paper sx={{ p: 1, textAlign: 'center' }}>
-                <Typography variant="h6">198</Typography>
-                <Typography variant="caption">Active</Typography>
-              </Paper>
-            </Grid>
-            <Grid item xs={4}>
-              <Paper sx={{ p: 1, textAlign: 'center' }}>
-                <Typography variant="h6">12</Typography>
-                <Typography variant="caption">Pending</Typography>
-              </Paper>
-            </Grid>
-          </Grid>
         </Box>
 
         {/* Table Section */}

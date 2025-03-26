@@ -331,26 +331,6 @@ export default function VolunteerDashboard() {
                       }}
                     />
                     <Chip
-                      icon={<StarIcon />}
-                      label={`Level ${level}`}
-                      sx={{ 
-                        color: 'white',
-                        fontWeight: 'bold',
-                        bgcolor: 'rgba(255,255,255,0.2)',
-                        '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }
-                      }}
-                    />
-                    <Chip
-                      icon={<VolunteerActivismIcon />}
-                      label={`${totalPoints} Points`}
-                      sx={{ 
-                        color: 'white',
-                        fontWeight: 'bold',
-                        bgcolor: 'rgba(255,255,255,0.2)',
-                        '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }
-                      }}
-                    />
-                    <Chip
                       icon={<TimerIcon />}
                       label={`${totalHours} Hours`}
                       sx={{ 
@@ -377,35 +357,7 @@ export default function VolunteerDashboard() {
                   </Button>
                 </Grid>
                 <Grid item xs={12} sm={3}>
-                  <Card variant="outlined" sx={{ p: 2, bgcolor: "rgba(255,255,255,0.15)", borderRadius: 3, backdropFilter: 'blur(10px)' }}>
-                    <Typography variant="subtitle2" gutterBottom color="white" fontWeight="bold">
-                      Level Progress
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <Typography variant="body2" color="white" sx={{ mr: 1 }}>
-                        {totalPoints % 100}
-                      </Typography>
-                      <LinearProgress
-                        variant="determinate"
-                        value={levelProgress}
-                        sx={{ 
-                          flexGrow: 1,
-                          height: 8,
-                          borderRadius: 4,
-                          bgcolor: 'rgba(255,255,255,0.3)',
-                          '& .MuiLinearProgress-bar': {
-                            bgcolor: 'white'
-                          }
-                        }}
-                      />
-                      <Typography variant="body2" color="white" sx={{ ml: 1 }}>
-                        100
-                      </Typography>
-                    </Box>
-                    <Typography variant="body2" color="white" sx={{ opacity: 0.9 }}>
-                      {pointsToNextLevel} points to level {level + 1}
-                    </Typography>
-                  </Card>
+                  {/* Level Progress section removed */}
                 </Grid>
               </Grid>
             </Paper>
@@ -503,14 +455,6 @@ export default function VolunteerDashboard() {
                       Hours
                     </Typography>
                   </Box>
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="h4" fontWeight="bold" color="#2196F3">
-                      {totalPoints}
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                      Points
-                    </Typography>
-                  </Box>
                 </Box>
 
                 <Typography variant="h6" gutterBottom sx={{ mt: 4, color: "#9C27B0", fontWeight: "bold" }}>
@@ -592,11 +536,6 @@ export default function VolunteerDashboard() {
                           </Typography>
                           <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                             <Chip
-                              label={`+${event.points} Points`}
-                              size="small"
-                              sx={{ bgcolor: '#FF5722', color: 'white' }}
-                            />
-                            <Chip
                               label={`${event.hours} Hours`}
                               size="small"
                               variant="outlined"
@@ -669,7 +608,7 @@ export default function VolunteerDashboard() {
                               {event.title}
                             </Typography>
                             <Chip
-                              label={`+${event.points} Points`}
+                              label={`${event.hours} Hours`}
                               size="small"
                               sx={{ mb: 2, bgcolor: '#4CAF50', color: 'white', fontWeight: 'medium' }}
                             />
@@ -780,15 +719,9 @@ export default function VolunteerDashboard() {
                             </Typography>
                             <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                               <Chip
-                                label={`+${event.points} Points`}
-                                size="small"
-                                sx={{ bgcolor: '#2196F3', color: 'white', fontWeight: 'medium' }}
-                              />
-                              <Chip
                                 label={`${event.hours} Hours`}
                                 size="small"
                                 variant="outlined"
-                                sx={{ borderColor: '#2196F3', color: '#2196F3' }}
                               />
                             </Box>
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>

@@ -74,7 +74,6 @@ const CreateEventPage: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [newRequirement, setNewRequirement] = useState('');
   const [newSkill, setNewSkill] = useState('');
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<EventFormData>({
     title: '',
@@ -83,7 +82,7 @@ const CreateEventPage: React.FC = () => {
     startDate: null,
     endDate: null,
     category: '',
-    imageUrl: 'https://source.unsplash.com/random/800x600/?volunteer',
+    imageUrl: '',
     participantLimit: 20,
     requirements: [],
     skills: [],
@@ -151,20 +150,6 @@ const CreateEventPage: React.FC = () => {
       ...formData,
       skills: formData.skills.filter(item => item !== skill),
     });
-  };
-  
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // In a real app, you would upload the file to storage and get a URL
-      // For now, we'll create a temporary URL
-      const url = URL.createObjectURL(file);
-      setImagePreview(url);
-      setFormData({
-        ...formData,
-        imageUrl: url,
-      });
-    }
   };
   
   const validateStep = (step: number): boolean => {
@@ -282,7 +267,7 @@ const CreateEventPage: React.FC = () => {
       startDate: null,
       endDate: null,
       category: '',
-      imageUrl: 'https://source.unsplash.com/random/800x600/?volunteer',
+      imageUrl: '',
       participantLimit: 20,
       requirements: [],
       skills: [],
@@ -290,7 +275,6 @@ const CreateEventPage: React.FC = () => {
       contact: '',
     });
     setActiveStep(0);
-    setImagePreview(null);
   };
   
   const steps = ['Basic Information', 'Date & Capacity', 'Requirements & Skills', 'Review & Publish'];
@@ -352,62 +336,6 @@ const CreateEventPage: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
-            
-            <Box sx={{ mt: 3 }}>
-              <Typography variant="subtitle1" gutterBottom>
-                Event Image
-              </Typography>
-              
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                <Button
-                  variant="outlined"
-                  component="label"
-                  startIcon={<UploadFileIcon />}
-                >
-                  Upload Image
-                  <input
-                    type="file"
-                    accept="image/*"
-                    hidden
-                    onChange={handleImageUpload}
-                  />
-                </Button>
-                
-                <Typography variant="body2" color="text.secondary">
-                  Recommended size: 800x600 pixels
-                </Typography>
-              </Box>
-              
-              {imagePreview ? (
-                <Box
-                  component="img"
-                  src={imagePreview}
-                  alt="Event preview"
-                  sx={{
-                    width: '100%',
-                    height: 200,
-                    objectFit: 'cover',
-                    borderRadius: 1,
-                  }}
-                />
-              ) : (
-                <Box
-                  sx={{
-                    width: '100%',
-                    height: 200,
-                    backgroundColor: '#f0f0f0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: 1,
-                  }}
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    No image uploaded yet.
-                  </Typography>
-                </Box>
-              )}
-            </Box>
           </Box>
         );
         
@@ -615,7 +543,7 @@ const CreateEventPage: React.FC = () => {
                 <Grid item xs={12} md={4}>
                   <Box
                     component="img"
-                    src={imagePreview || formData.imageUrl}
+                    src={formData.imageUrl}
                     alt="Event preview"
                     sx={{
                       width: '100%',

@@ -22,6 +22,9 @@ import {
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import Layout from '../../components/layout/Layout';
+import { useAppDispatch, useAppSelector } from '../../redux/hooks';
+import { fetchLeaderboard } from '../../redux/actions/userActions';
+import { UserProfile } from '../../redux/slices/userSlice';
 
 interface LeaderboardUser {
   id: string;
@@ -34,152 +37,70 @@ interface LeaderboardUser {
   rank: number;
 }
 
-// Sample data
-const leaderboardData: LeaderboardUser[] = [
-  {
-    id: 'user1',
-    name: 'Rahul Sharma',
-    points: 850,
-    level: 5,
-    eventsParticipated: 12,
-    hoursVolunteered: 48,
-    badges: 8,
-    rank: 1,
-  },
-  {
-    id: 'user2',
-    name: 'Priya Patel',
-    points: 720,
-    level: 4,
-    eventsParticipated: 10,
-    hoursVolunteered: 42,
-    badges: 6,
-    rank: 2,
-  },
-  {
-    id: 'user3',
-    name: 'Arjun Nair',
-    points: 685,
-    level: 4,
-    eventsParticipated: 9,
-    hoursVolunteered: 38,
-    badges: 7,
-    rank: 3,
-  },
-  {
-    id: 'user4',
-    name: 'Anjali Singh',
-    points: 610,
-    level: 4,
-    eventsParticipated: 8,
-    hoursVolunteered: 32,
-    badges: 5,
-    rank: 4,
-  },
-  {
-    id: 'user5',
-    name: 'Vikram Reddy',
-    points: 590,
-    level: 3,
-    eventsParticipated: 7,
-    hoursVolunteered: 30,
-    badges: 5,
-    rank: 5,
-  },
-  {
-    id: 'user6',
-    name: 'Saanvi Desai',
-    points: 550,
-    level: 3,
-    eventsParticipated: 8,
-    hoursVolunteered: 28,
-    badges: 4,
-    rank: 6,
-  },
-  {
-    id: 'user7',
-    name: 'Rohan Kapoor',
-    points: 520,
-    level: 3,
-    eventsParticipated: 7,
-    hoursVolunteered: 26,
-    badges: 4,
-    rank: 7,
-  },
-  {
-    id: 'user8',
-    name: 'Neha Gupta',
-    points: 480,
-    level: 3,
-    eventsParticipated: 6,
-    hoursVolunteered: 24,
-    badges: 3,
-    rank: 8,
-  },
-  {
-    id: 'user9',
-    name: 'Mihir Joshi',
-    points: 430,
-    level: 2,
-    eventsParticipated: 5,
-    hoursVolunteered: 20,
-    badges: 3,
-    rank: 9,
-  },
-  {
-    id: 'user10',
-    name: 'Deepa Kumar',
-    points: 385,
-    level: 2,
-    eventsParticipated: 5,
-    hoursVolunteered: 18,
-    badges: 2,
-    rank: 10,
-  },
-];
+// Get time periods based on tab value
+const getTimePeriod = (tabIndex: number): string => {
+  switch (tabIndex) {
+    case 0: return 'all-time';
+    case 1: return 'monthly';
+    case 2: return 'weekly';
+    default: return 'all-time';
+  }
+};
 
-// Mock API call
-const fetchLeaderboardData = async (period: string): Promise<LeaderboardUser[]> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // For a real application, you would filter the data based on the period
-  return leaderboardData;
+// Map UserProfile from Redux to LeaderboardUser format
+const mapProfileToLeaderboardUser = (profile: UserProfile, index: number): LeaderboardUser => {
+  return {
+    id: profile.id,
+    name: profile.displayName,
+    points: profile.points,
+    level: profile.level,
+    eventsParticipated: profile.eventsAttended.length,
+    hoursVolunteered: profile.hoursVolunteered,
+    badges: profile.badges.length,
+    rank: index + 1,
+  };
 };
 
 export default function LeaderboardPage() {
+  const dispatch = useAppDispatch();
+  const { leaderboard: reduxLeaderboard, isLoading, error: reduxError } = useAppSelector(state => state.user);
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
   
-  // Get time periods based on tab value
-  const getTimePeriod = (tabIndex: number): string => {
-    switch (tabIndex) {
-      case 0: return 'all-time';
-      case 1: return 'monthly';
-      case 2: return 'weekly';
-      default: return 'all-time';
-    }
-  };
-  
   useEffect(() => {
     const loadLeaderboard = async () => {
-      setLoading(true);
       try {
         const period = getTimePeriod(tabValue);
-        const data = await fetchLeaderboardData(period);
-        setLeaderboard(data);
+        await dispatch(fetchLeaderboard(period));
+        setError(null);
       } catch (err) {
         setError('Failed to load leaderboard data. Please try again later.');
         console.error(err);
-      } finally {
-        setLoading(false);
       }
     };
     
     loadLeaderboard();
-  }, [tabValue]);
+  }, [dispatch, tabValue]);
+  
+  // Map Redux profiles to LeaderboardUser format when reduxLeaderboard changes
+  useEffect(() => {
+    if (reduxLeaderboard?.length > 0) {
+      // Sort by points in descending order before mapping
+      const sortedLeaderboard = [...reduxLeaderboard]
+        .sort((a, b) => b.points - a.points)
+        .map(mapProfileToLeaderboardUser);
+      
+      setLeaderboard(sortedLeaderboard);
+    }
+  }, [reduxLeaderboard]);
+
+  // Set error from Redux if it exists
+  useEffect(() => {
+    if (reduxError) {
+      setError(reduxError);
+    }
+  }, [reduxError]);
   
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -217,12 +138,14 @@ export default function LeaderboardPage() {
           </Tabs>
         </Paper>
         
-        {loading ? (
+        {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
             <CircularProgress />
           </Box>
         ) : error ? (
           <Alert severity="error">{error}</Alert>
+        ) : leaderboard.length === 0 ? (
+          <Alert severity="info">No leaderboard data available for this time period.</Alert>
         ) : (
           <>
             {/* Top 3 Simplified */}

@@ -44,9 +44,9 @@ import {
   Delete as DeleteIcon, 
   Warning as WarningIcon,
   ContentCopy as CopyIcon,
-  Visibility as ViewIcon,
   Search as SearchIcon,
   FilterList as FilterIcon,
+  UploadFile as UploadFileIcon,
 } from '@mui/icons-material';
 
 // Define type for event from backend
@@ -69,10 +69,10 @@ interface Event {
   points_awarded: number;
   hours_required: number;
   participants: any[];
-  availableSlots?: number; // Optional for calculating available slots
+  availableSlots?: number;
 }
 
-// Form state type - keep this for form data
+// Form state type
 interface EventFormData {
   event_id?: string;
   event_name: string;
@@ -93,68 +93,66 @@ interface EventFormData {
   hours_required: number;
 }
 
+// Event categories
+const EVENT_CATEGORIES = [
+  'Education',
+  'Health',
+  'Environment',
+  'Community',
+  'Cultural',
+  'Sports',
+  'Tech',
+  'Fundraising',
+  'Other',
+];
+
+// Default form values
+const DEFAULT_FORM_VALUES: EventFormData = {
+  event_name: '',
+  description: '',
+  start_date: '',
+  end_date: '',
+  location: '',
+  category: '',
+  status: 'Upcoming',
+  publish_event: false,
+  event_image: '',
+  participant_limit: 20,
+  requirements: [],
+  skills_needed: [],
+  age_restriction: 'No Restriction',
+  contact_information: '',
+  points_awarded: 0,
+  hours_required: 0,
+};
+
 export default function EventsManagement() {
   const router = useRouter();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [tabValue, setTabValue] = useState(0);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [dialogMode, setDialogMode] = useState('add');
-  const [selectedEvent, setSelectedEvent] = useState<any>(null);
   
-  // Confirmation dialog states
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [eventToDelete, setEventToDelete] = useState<any>(null);
-  const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
-  
-  // Add duplicate confirmation dialog state
-  const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
-  const [eventToDuplicate, setEventToDuplicate] = useState<any>(null);
-  
-  // Search state
+  // Event data states
+  const [events, setEvents] = useState<Event[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Form state
-  const [formData, setFormData] = useState<EventFormData>({
-    event_name: '',
-    description: '',
-    start_date: '',
-    end_date: '',
-    location: '',
-    category: '',
-    status: 'Upcoming',
-    publish_event: false,
-    event_image: '', // This will be set automatically by the backend
-    participant_limit: 20,
-    requirements: [],
-    skills_needed: [],
-    age_restriction: 'No Restriction',
-    contact_information: '',
-    points_awarded: 0,
-    hours_required: 0,
-  });
-
+  // Form states
+  const [formData, setFormData] = useState<EventFormData>(DEFAULT_FORM_VALUES);
   const [newRequirement, setNewRequirement] = useState('');
   const [newSkill, setNewSkill] = useState('');
-
-  // Event categories - matching the volunteer/participant form
-  const EVENT_CATEGORIES = [
-    'Education',
-    'Health',
-    'Environment',
-    'Community',
-    'Cultural',
-    'Sports',
-    'Tech',
-    'Fundraising',
-    'Other',
-  ];
-
-  // State for events list
-  const [events, setEvents] = useState<Event[]>([]);
+  
+  // Dialog states
+  const [openDialog, setOpenDialog] = useState(false);
+  const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<Event | null>(null);
+  const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
+  const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
+  const [eventToDuplicate, setEventToDuplicate] = useState<Event | null>(null);
 
   useEffect(() => {
-    // Check if user is authenticated and is an admin
+    // Check user authentication and role
     if (!isAuthenticated) {
       router.push('/login');
       return;
@@ -165,32 +163,23 @@ export default function EventsManagement() {
       return;
     }
 
-    // Fetch events from backend
-    const fetchEvents = async () => {
-      try {
-        const apiClient = (await import('../../../utils/api')).default;
-        const response = await apiClient.events.getAllEvents();
-        setEvents(response.data.events);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error fetching events:', error);
-        setIsLoading(false);
-      }
-    };
-
     fetchEvents();
   }, [isAuthenticated, router, user?.role]);
 
-  const categories = [
-    'Education', 
-    'Health', 
-    'Arts', 
-    'Sports', 
-    'Environment', 
-    'Other'
-  ];
+  // Fetch events from backend
+  const fetchEvents = async () => {
+    try {
+      const apiClient = (await import('../../../utils/api')).default;
+      const response = await apiClient.events.getAllEvents();
+      setEvents(response.data.events);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      setIsLoading(false);
+    }
+  };
 
-  // Filters
+  // Filter events based on tab and search query
   const filteredEvents = events.filter(event => {
     // Filter by tab
     let passesTabFilter = true;
@@ -203,7 +192,7 @@ export default function EventsManagement() {
     }
     
     // Filter by search query
-    const passesSearchFilter = searchQuery === '' || 
+    const passesSearchFilter = !searchQuery || 
       event.event_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.category.toLowerCase().includes(searchQuery.toLowerCase());
@@ -211,74 +200,39 @@ export default function EventsManagement() {
     return passesTabFilter && passesSearchFilter;
   });
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  // Event handlers
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
   const handleAddEvent = () => {
     setDialogMode('add');
-    // Reset form to defaults
-    setFormData({
-      event_name: '',
-      description: '',
-      start_date: '',
-      end_date: '',
-      location: '',
-      category: '',
-      status: 'Upcoming',
-      publish_event: false,
-      event_image: '', // This empty string indicates backend should use a default image
-      participant_limit: 20,
-      requirements: [],
-      skills_needed: [],
-      age_restriction: 'No Restriction',
-      contact_information: '',
-      points_awarded: 0,
-      hours_required: 0,
-    });
+    setFormData(DEFAULT_FORM_VALUES);
     setOpenDialog(true);
   };
 
-  const handleEditEvent = (event: any) => {
+  const handleEditEvent = (event: Event) => {
     setDialogMode('edit');
     setSelectedEvent(event);
-    setFormData({
-      ...event,
-    });
+    setFormData({...event});
     setOpenDialog(true);
-  };
-
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setSelectedEvent(null);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData(prev => ({...prev, [name]: value}));
   };
 
-  // Select inputs need special handling
   const handleSelectChange = (e: any) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData(prev => ({...prev, [name]: value}));
   };
 
   const handleToggleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: checked,
-    });
+    setFormData(prev => ({...prev, [name]: checked}));
   };
 
-  // Updated to show confirmation dialog
   const handleSaveClick = () => {
     if (dialogMode === 'edit') {
       setSaveConfirmOpen(true);
@@ -310,7 +264,7 @@ export default function EventsManagement() {
     try {
       const apiClient = (await import('../../../utils/api')).default;
       
-      // Ensure numeric fields are numbers, not strings
+      // Ensure numeric fields are numbers
       const cleanedFormData = {
         ...formData,
         points_awarded: Number(formData.points_awarded),
@@ -318,29 +272,16 @@ export default function EventsManagement() {
         participant_limit: Number(formData.participant_limit),
       };
       
-      console.log('Sending data to backend:', cleanedFormData);
-      
-      // The form data should already match the backend structure
       if (dialogMode === 'add') {
         const response = await apiClient.events.createEvent(cleanedFormData);
-        console.log('Create response:', response.data);
-        
-        // Add the new event to the list
-        setEvents([...events, response.data.event]);
-        
-        // Show confirmation
+        setEvents(prev => [...prev, response.data.event]);
         alert('Event created successfully!');
       } else {
         // Update existing event
-        const response = await apiClient.events.updateEvent(selectedEvent.event_id, cleanedFormData);
-        console.log('Update response:', response.data);
-        
-        // Update the event in the list
-        setEvents(events.map(event => 
-          event.event_id === selectedEvent.event_id ? response.data.event : event
+        const response = await apiClient.events.updateEvent(selectedEvent!.event_id, cleanedFormData);
+        setEvents(prev => prev.map(event => 
+          event.event_id === selectedEvent!.event_id ? response.data.event : event
         ));
-        
-        // Show confirmation
         alert('Event updated successfully!');
       }
       
@@ -354,21 +295,22 @@ export default function EventsManagement() {
     }
   };
 
-  // Delete functions - updated for confirmation
-  const handleDeleteClick = (event_id: string) => {
-    const eventToDelete = events.find(event => event.event_id === event_id);
-    setEventToDelete(eventToDelete);
-    setDeleteConfirmOpen(true);
+  const handleDeleteClick = (eventId: string) => {
+    const event = events.find(e => e.event_id === eventId);
+    if (event) {
+      setEventToDelete(event);
+      setDeleteConfirmOpen(true);
+    }
   };
 
   const handleDeleteEvent = async () => {
+    if (!eventToDelete) return;
+    
     try {
       const apiClient = (await import('../../../utils/api')).default;
       await apiClient.events.deleteEvent(eventToDelete.event_id);
       
-      // Remove event from list
-      setEvents(events.filter(event => event.event_id !== eventToDelete.event_id));
-      
+      setEvents(prev => prev.filter(event => event.event_id !== eventToDelete.event_id));
       setDeleteConfirmOpen(false);
       setEventToDelete(null);
       
@@ -379,19 +321,10 @@ export default function EventsManagement() {
     }
   };
 
-  const handleCancelDelete = () => {
-    setDeleteConfirmOpen(false);
-    setEventToDelete(null);
-  };
-
-  const handleCancelSave = () => {
-    setSaveConfirmOpen(false);
-  };
-
-  const handleTogglePublish = async (event_id: string, currentStatus: boolean) => {
+  const handleTogglePublish = async (eventId: string, currentStatus: boolean) => {
     try {
       const apiClient = (await import('../../../utils/api')).default;
-      const event = events.find(e => e.event_id === event_id);
+      const event = events.find(e => e.event_id === eventId);
       
       if (!event) return;
       
@@ -401,55 +334,41 @@ export default function EventsManagement() {
         publish_event: !currentStatus
       };
       
-      // Send request to backend
-      await apiClient.events.updateEvent(event_id, updatedEvent);
+      await apiClient.events.updateEvent(eventId, updatedEvent);
       
-      // Update events list
-      setEvents(events.map(e => 
-        e.event_id === event_id ? {...e, publish_event: !currentStatus} : e
+      setEvents(prev => prev.map(e => 
+        e.event_id === eventId ? {...e, publish_event: !currentStatus} : e
       ));
-      
-      console.log(`${currentStatus ? 'Unpublishing' : 'Publishing'} event ID:`, event_id);
     } catch (error) {
       console.error('Error toggling publish status:', error);
       alert('Failed to update publish status. Please try again.');
     }
   };
 
-  // Update to first show confirmation
-  const handleCloneClick = (event: any) => {
+  const handleCloneClick = (event: Event) => {
     setEventToDuplicate(event);
     setDuplicateConfirmOpen(true);
   };
 
-  // Actual clone logic moved to this function
   const handleCloneEvent = () => {
-    // Create a deep copy of the event to avoid reference issues
-    const clonedEvent = JSON.parse(JSON.stringify(eventToDuplicate));
+    if (!eventToDuplicate) return;
     
+    // Create a copy of the event
     setDialogMode('add');
     setFormData({
-      ...clonedEvent,
+      ...JSON.parse(JSON.stringify(eventToDuplicate)),
       event_name: `Copy of ${eventToDuplicate.event_name}`,
-      publish_event: false, // Default to unpublished for safety
-      // Convert any event structure differences if needed
-      participant_limit: clonedEvent.participant_limit || clonedEvent.availableSlots || 20,
-      requirements: clonedEvent.requirements || [],
-      skills_needed: clonedEvent.skills_needed || [],
-      age_restriction: clonedEvent.age_restriction || 'No Restriction',
-      contact_information: clonedEvent.contact_information || '',
-      event_image: clonedEvent.event_image || 'https://source.unsplash.com/random/800x600/?volunteer',
+      publish_event: false,
+      participant_limit: eventToDuplicate.participant_limit || 20,
+      requirements: eventToDuplicate.requirements || [],
+      skills_needed: eventToDuplicate.skills_needed || [],
+      age_restriction: eventToDuplicate.age_restriction || 'No Restriction',
+      contact_information: eventToDuplicate.contact_information || '',
     });
     
-    // Close confirmation dialog and open edit dialog
     setDuplicateConfirmOpen(false);
     setEventToDuplicate(null);
     setOpenDialog(true);
-  };
-
-  const handleCancelDuplicate = () => {
-    setDuplicateConfirmOpen(false);
-    setEventToDuplicate(null);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -458,50 +377,53 @@ export default function EventsManagement() {
 
   const handleAddRequirement = () => {
     if (newRequirement.trim() !== '' && !formData.requirements.includes(newRequirement.trim())) {
-      setFormData({
-        ...formData,
-        requirements: [...formData.requirements, newRequirement.trim()],
-      });
+      setFormData(prev => ({
+        ...prev,
+        requirements: [...prev.requirements, newRequirement.trim()],
+      }));
       setNewRequirement('');
     }
   };
   
   const handleRemoveRequirement = (requirement: string) => {
-    setFormData({
-      ...formData,
-      requirements: formData.requirements.filter(item => item !== requirement),
-    });
+    setFormData(prev => ({
+      ...prev,
+      requirements: prev.requirements.filter(item => item !== requirement),
+    }));
   };
   
   const handleAddSkill = () => {
     if (newSkill.trim() !== '' && !formData.skills_needed.includes(newSkill.trim())) {
-      setFormData({
-        ...formData,
-        skills_needed: [...formData.skills_needed, newSkill.trim()],
-      });
+      setFormData(prev => ({
+        ...prev,
+        skills_needed: [...prev.skills_needed, newSkill.trim()],
+      }));
       setNewSkill('');
     }
   };
   
   const handleRemoveSkill = (skill: string) => {
-    setFormData({
-      ...formData,
-      skills_needed: formData.skills_needed.filter(item => item !== skill),
-    });
+    setFormData(prev => ({
+      ...prev,
+      skills_needed: prev.skills_needed.filter(item => item !== skill),
+    }));
+  };
+
+  // Helper functions
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Upcoming': return { bg: 'rgba(25, 118, 210, 0.08)', color: 'primary.main' };
+      case 'Ongoing': return { bg: 'rgba(255, 193, 7, 0.08)', color: '#FFC107' };
+      case 'Completed': return { bg: 'rgba(46, 125, 50, 0.08)', color: '#4CAF50' };
+      default: return { bg: 'rgba(25, 118, 210, 0.08)', color: 'primary.main' };
+    }
   };
 
   if (isLoading) {
     return (
       <Layout>
         <Container maxWidth="lg">
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              minHeight: '60vh',
-            }}
-          >
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
             <CircularProgress />
           </Box>
         </Container>
@@ -512,6 +434,7 @@ export default function EventsManagement() {
   return (
     <Layout>
       <Container maxWidth="lg" sx={{ py: 4 }}>
+        {/* Header */}
         <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
@@ -531,6 +454,7 @@ export default function EventsManagement() {
           </Button>
         </Box>
 
+        {/* Events Table */}
         <Paper sx={{ mb: 3 }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
             <Tabs
@@ -547,6 +471,7 @@ export default function EventsManagement() {
           </Box>
 
           <Box sx={{ p: 3 }}>
+            {/* Search and Filter */}
             <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
               <Grid item xs={12} sm={6} md={8}>
                 <TextField
@@ -577,6 +502,7 @@ export default function EventsManagement() {
               </Grid>
             </Grid>
 
+            {/* Events Table */}
             <TableContainer>
               <Table>
                 <TableHead>
@@ -592,72 +518,70 @@ export default function EventsManagement() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filteredEvents.map((event) => (
-                    <TableRow key={event.event_id}>
-                      <TableCell>
-                        {!event.publish_event && <span style={{ color: 'gray', fontStyle: 'italic' }}>(draft) </span>}
-                        {event.event_name}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(event.start_date).toLocaleDateString()} {event.end_date !== event.start_date && `- ${new Date(event.end_date).toLocaleDateString()}`}
-                      </TableCell>
-                      <TableCell>{event.location}</TableCell>
-                      <TableCell>{event.category}</TableCell>
-                      <TableCell align="center">
-                        <Chip 
-                          label={event.status} 
-                          size="small"
-                          sx={{
-                            bgcolor: event.status === 'Upcoming' 
-                              ? 'rgba(25, 118, 210, 0.08)'
-                              : event.status === 'Ongoing'
-                                ? 'rgba(255, 193, 7, 0.08)'
-                                : 'rgba(46, 125, 50, 0.08)',
-                            color: event.status === 'Upcoming' 
-                              ? 'primary.main'
-                              : event.status === 'Ongoing'
-                                ? '#FFC107' // yellow
-                                : '#4CAF50', // green
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Switch
-                          checked={event.publish_event}
-                          onChange={() => handleTogglePublish(event.event_id, event.publish_event)}
-                          size="small"
-                          color="primary"
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        {event.participants.length}/{event.participant_limit}
-                      </TableCell>
-                      <TableCell align="right">
-                        <IconButton 
-                          size="small" 
-                          onClick={() => handleEditEvent(event)}
-                          sx={{ color: THEME_COLORS.offBlack }}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton 
-                          size="small" 
-                          onClick={() => handleCloneClick(event)}
-                          sx={{ color: THEME_COLORS.offBlack }}
-                        >
-                          <CopyIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton 
-                          size="small" 
-                          onClick={() => handleDeleteClick(event.event_id)}
-                          sx={{ color: THEME_COLORS.offBlack }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {filteredEvents.length === 0 && (
+                  {filteredEvents.length > 0 ? (
+                    filteredEvents.map((event) => {
+                      const statusStyle = getStatusColor(event.status);
+                      return (
+                        <TableRow key={event.event_id}>
+                          <TableCell>
+                            {!event.publish_event && <span style={{ color: 'gray', fontStyle: 'italic' }}>(draft) </span>}
+                            {event.event_name}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(event.start_date).toLocaleDateString()} 
+                            {event.end_date !== event.start_date && 
+                              ` - ${new Date(event.end_date).toLocaleDateString()}`}
+                          </TableCell>
+                          <TableCell>{event.location}</TableCell>
+                          <TableCell>{event.category}</TableCell>
+                          <TableCell align="center">
+                            <Chip 
+                              label={event.status} 
+                              size="small"
+                              sx={{
+                                bgcolor: statusStyle.bg,
+                                color: statusStyle.color,
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell align="center">
+                            <Switch
+                              checked={event.publish_event}
+                              onChange={() => handleTogglePublish(event.event_id, event.publish_event)}
+                              size="small"
+                              color="primary"
+                            />
+                          </TableCell>
+                          <TableCell align="center">
+                            {event.participants.length}/{event.participant_limit}
+                          </TableCell>
+                          <TableCell align="right">
+                            <IconButton 
+                              size="small" 
+                              onClick={() => handleEditEvent(event)}
+                              sx={{ color: THEME_COLORS.offBlack }}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton 
+                              size="small" 
+                              onClick={() => handleCloneClick(event)}
+                              sx={{ color: THEME_COLORS.offBlack }}
+                            >
+                              <CopyIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton 
+                              size="small" 
+                              onClick={() => handleDeleteClick(event.event_id)}
+                              sx={{ color: THEME_COLORS.offBlack }}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
                     <TableRow>
                       <TableCell colSpan={8} align="center" sx={{ py: 3 }}>
                         <Typography variant="body1" color="text.secondary">
@@ -673,7 +597,7 @@ export default function EventsManagement() {
         </Paper>
 
         {/* Event Dialog */}
-        <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+        <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="md" fullWidth>
           <DialogTitle>
             {dialogMode === 'add' ? 'Add New Event' : 'Edit Event'}
           </DialogTitle>
@@ -844,6 +768,7 @@ export default function EventsManagement() {
                 />
               </Grid>
               
+              {/* Requirements Section */}
               <Grid item xs={12}>
                 <Typography variant="subtitle1" gutterBottom>
                   Requirements
@@ -876,6 +801,7 @@ export default function EventsManagement() {
                 </Box>
               </Grid>
               
+              {/* Skills Section */}
               <Grid item xs={12}>
                 <Typography variant="subtitle1" gutterBottom>
                   Skills Needed
@@ -910,7 +836,7 @@ export default function EventsManagement() {
             </Grid>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseDialog} color="inherit">Cancel</Button>
+            <Button onClick={() => setOpenDialog(false)} color="inherit">Cancel</Button>
             <Button 
               onClick={handleSaveClick} 
               variant="contained"
@@ -922,7 +848,7 @@ export default function EventsManagement() {
         </Dialog>
 
         {/* Delete Confirmation Dialog */}
-        <Dialog open={deleteConfirmOpen} onClose={handleCancelDelete}>
+        <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
           <DialogTitle sx={{ color: 'error.main', display: 'flex', alignItems: 'center', gap: 1 }}>
             <WarningIcon /> Confirm Delete
           </DialogTitle>
@@ -932,13 +858,13 @@ export default function EventsManagement() {
             </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCancelDelete} color="inherit">Cancel</Button>
+            <Button onClick={() => setDeleteConfirmOpen(false)} color="inherit">Cancel</Button>
             <Button onClick={handleDeleteEvent} color="error">Delete</Button>
           </DialogActions>
         </Dialog>
 
         {/* Save Confirmation Dialog */}
-        <Dialog open={saveConfirmOpen} onClose={handleCancelSave}>
+        <Dialog open={saveConfirmOpen} onClose={() => setSaveConfirmOpen(false)}>
           <DialogTitle>Confirm Changes</DialogTitle>
           <DialogContent>
             <DialogContentText>
@@ -946,7 +872,7 @@ export default function EventsManagement() {
             </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCancelSave} color="inherit">Cancel</Button>
+            <Button onClick={() => setSaveConfirmOpen(false)} color="inherit">Cancel</Button>
             <Button 
               onClick={handleSaveEvent} 
               variant="contained"
@@ -957,8 +883,8 @@ export default function EventsManagement() {
           </DialogActions>
         </Dialog>
 
-        {/* Add Duplicate Confirmation Dialog after the existing dialogs */}
-        <Dialog open={duplicateConfirmOpen} onClose={handleCancelDuplicate}>
+        {/* Duplicate Confirmation Dialog */}
+        <Dialog open={duplicateConfirmOpen} onClose={() => setDuplicateConfirmOpen(false)}>
           <DialogTitle>Duplicate Event</DialogTitle>
           <DialogContent>
             <DialogContentText>
@@ -967,7 +893,7 @@ export default function EventsManagement() {
             </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCancelDuplicate} color="inherit">Cancel</Button>
+            <Button onClick={() => setDuplicateConfirmOpen(false)} color="inherit">Cancel</Button>
             <Button 
               onClick={handleCloneEvent} 
               variant="contained"

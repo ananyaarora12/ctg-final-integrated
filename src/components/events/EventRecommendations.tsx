@@ -37,74 +37,25 @@ const EventRecommendations: React.FC<EventRecommendationsProps> = ({
   
   // Get recommendations based on matching category or location
   const recommendations = React.useMemo(() => {
-    // Safety check for missing data
-    if (!currentEvent || !allEvents || allEvents.length === 0) {
-      console.log("Missing data for recommendations");
-      return [];
-    }
-    
-    // Filter out the current event and get only upcoming events
-    const upcomingEvents = allEvents.filter(event => 
-      event.id !== currentEvent.id && 
-      event.status === 'upcoming'
-    );
-    
-    if (upcomingEvents.length === 0) {
-      console.log("No upcoming events available for recommendations");
-      return [];
-    }
-    
-    // Extract current event city
-    const currentEventCity = currentEvent.location?.split(',').pop()?.trim() || '';
-    const currentEventCategory = currentEvent.category;
-    
-    console.log("Looking for matches with:", { 
-      category: currentEventCategory, 
-      city: currentEventCity 
-    });
-    
-    // Find events with matching location or category
-    const matchingEvents = upcomingEvents.filter(event => {
-      const eventCity = event.location?.split(',').pop()?.trim() || '';
-      
-      // Only include if category or location matches
-      const categoryMatch = currentEventCategory && event.category === currentEventCategory;
-      const locationMatch = currentEventCity && eventCity && currentEventCity === eventCity;
-      
-      return categoryMatch || locationMatch;
-    });
-    
-    if (matchingEvents.length === 0) {
-      console.log("No matching events found");
-      // Don't return random events if no matches
-      return [];
-    }
-    
-    console.log("Found matching events:", matchingEvents.length);
-    
-    // Sort by "relevance" - category matches first, then location matches
-    return matchingEvents
-      .sort((a, b) => {
-        // First prioritize category matches
-        const aMatchesCategory = a.category === currentEventCategory ? 1 : 0;
-        const bMatchesCategory = b.category === currentEventCategory ? 1 : 0;
-        
-        if (aMatchesCategory !== bMatchesCategory) {
-          return bMatchesCategory - aMatchesCategory;
-        }
-        
-        // Then prioritize location matches
-        const aCity = a.location?.split(',').pop()?.trim() || '';
-        const bCity = b.location?.split(',').pop()?.trim() || '';
-        const aMatchesLocation = aCity === currentEventCity ? 1 : 0;
-        const bMatchesLocation = bCity === currentEventCity ? 1 : 0;
-        
-        return bMatchesLocation - aMatchesLocation;
-      })
-      .slice(0, maxRecommendations);
-  }, [currentEvent, allEvents, maxRecommendations]);
+    // Always include a beach cleanup event
+    const beachCleanupEvent = {
+      id: 'beach-cleanup-event',
+      title: 'Beach Cleanup Volunteer Day',
+      description: 'Join us for a day of cleaning our local beaches and protecting marine life.',
+      startDate: new Date(new Date().setDate(new Date().getDate() + 14)).toISOString(), // 2 weeks from now
+      endDate: new Date(new Date().setDate(new Date().getDate() + 14)).toISOString(),
+      location: 'Marina Beach, Chennai',
+      category: 'Environment',
+      status: 'upcoming',
+      participantsLimit: 50,
+      currentParticipants: 12,
+    };
+
+    // Return just the beach cleanup event
+    return [beachCleanupEvent];
+  }, []);
   
-  console.log("Final recommendations:", recommendations.length);
+  console.log("Fixed beach cleanup recommendation added");
   
   // Determine why each event is being recommended
   const getRecommendationReason = (event: EventData) => {
@@ -136,13 +87,7 @@ const EventRecommendations: React.FC<EventRecommendationsProps> = ({
           {recommendations.map(event => (
             <Grid item key={event.id} xs={12} sm={6}>
               <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <CardMedia
-                  component="img"
-                  height="160"
-                  image={event.image}
-                  alt={event.title}
-                  sx={{ objectFit: 'cover' }}
-                />
+                {/* Removed CardMedia component for image display */}
                 
                 <CardContent sx={{ flexGrow: 1 }}>
                   <Chip 

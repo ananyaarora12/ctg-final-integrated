@@ -106,7 +106,7 @@ const Testimonials = () => {
               quote="I believe in building a society where people with disabilities are potential tax-payers but not dole recipients."
               name="Dr. Mahantesh G Kivadasannavar"
               title="Founder Chairman - Samarthanam International"
-              image="/images/founder.jpg"
+              image="/images/mahantesh.png"
             />
           </Grid>
           <Grid item xs={12} md={6}>
@@ -114,7 +114,7 @@ const Testimonials = () => {
               quote="Samarthanam has provided me opportunities to gain new skills that have transformed my life. I'm now more confident and independent."
               name="Sai Prasanna"
               title="Program Beneficiary"
-              image="/images/sports.jpg" // Using an existing image as placeholder
+              image="/images/saiprasanna.png"
             />
           </Grid>
         </Grid>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSelector, useDispatch } from 'react-redux';
 import {
@@ -38,7 +38,7 @@ import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import ShareIcon from '@mui/icons-material/Share';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { format, parseISO } from 'date-fns';
-import Layout from '../../../components/layout/Layout';
+import Layout, { THEME_COLORS } from '../../../components/layout/Layout';
 import { sampleEvents, calculateEventStatus } from '../page';
 import { RootState } from '../../../redux/store';
 import VolunteerCertificate from '@/components/certificates/VolunteerCertificate';
@@ -47,6 +47,7 @@ import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import { logout } from '@/redux/slices/authSlice';
 import LogoutIcon from '@mui/icons-material/Logout';
+import EventRecommendations from '../../../components/events/EventRecommendations';
 
 const EventDetailsPage: React.FC = () => {
   const params = useParams();
@@ -66,11 +67,24 @@ const EventDetailsPage: React.FC = () => {
   const isOngoing = event && new Date(event.startDate) <= new Date() && new Date(event.endDate) >= new Date();
   const isCompleted = event && new Date(event.endDate) < new Date();
   
-  // Check if the user has already registered for this event
-  const isRegisteredForEvent = React.useMemo(() => {
-    if (!user || !user.registeredEvents) return false;
-    return user.registeredEvents.includes(params.id as string);
-  }, [user, params.id]);
+  // Check if the user is registered for this event
+  const isRegisteredForEvent = useMemo(() => {
+    if (!isAuthenticated || !user || !params.id) {
+      return false;
+    }
+    
+    // Initialize registeredEvents as an empty array if it doesn't exist
+    const registeredEvents = user.registeredEvents || [];
+    
+    console.log("Checking registration status:", {
+      userRegisteredEvents: registeredEvents,
+      currentEventId: params.id,
+      isRegistered: registeredEvents.includes(params.id as string)
+    });
+    
+    // Check if the user's registeredEvents array includes this event's ID
+    return registeredEvents.includes(params.id as string);
+  }, [isAuthenticated, user, params.id]);
   
   useEffect(() => {
     const fetchEventDetails = async () => {
@@ -94,7 +108,6 @@ const EventDetailsPage: React.FC = () => {
           // Handle sample events as before
           const customizedEvent = {
             ...sampleEvent,
-            imageUrl: getIndianEventImage(sampleEvent.category),
           };
           setEvent(customizedEvent);
           setLoading(false);
@@ -128,8 +141,6 @@ const EventDetailsPage: React.FC = () => {
               id: event_id,
               title: event_name,
               description: description,
-              image: apiEvent.event_image || '',
-              imageUrl: apiEvent.event_image || getIndianEventImage(apiEvent.category || 'default'),
               startDate: start_date,
               endDate: end_date,
               location: apiEvent.location || 'TBD',
@@ -207,23 +218,6 @@ const EventDetailsPage: React.FC = () => {
     }
   }, [isAuthenticated, params.id, user]);
   
-  // Function to provide culturally relevant images
-  const getIndianEventImage = (category: string) => {
-    const images: Record<string, string> = {
-      'Education': 'https://images.unsplash.com/photo-1456243762991-9bc5d5e960db?q=80&w=1000&auto=format&fit=crop',
-      'Health': 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=1000&auto=format&fit=crop',
-      'Environment': 'https://images.unsplash.com/photo-1590274853856-f808e6a0c5f2?q=80&w=1000&auto=format&fit=crop',
-      'Community': 'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1000&auto=format&fit=crop',
-      'Cultural': 'https://images.unsplash.com/photo-1603206004639-22003d78a0d6?q=80&w=1000&auto=format&fit=crop',
-      'Sports': 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=1000&auto=format&fit=crop',
-      'Tech': 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1000&auto=format&fit=crop',
-      'Fundraising': 'https://images.unsplash.com/photo-1593113598332-cd59a93333c3?q=80&w=1000&auto=format&fit=crop',
-      'default': 'https://images.unsplash.com/photo-1524592714635-d77511a4834d?q=80&w=1000&auto=format&fit=crop',
-    };
-    
-    return images[category] || images['default'];
-  };
-  
   const handleRegisterClick = () => {
     if (!isAuthenticated) {
       router.push(`/login?redirect=/events/${params.id}/register`);
@@ -282,24 +276,14 @@ const EventDetailsPage: React.FC = () => {
     <Layout>
       <Box 
         sx={{ 
-          height: { xs: '200px', md: '300px' }, 
+          height: { xs: '100px', md: '150px' }, 
           width: '100%', 
           overflow: 'hidden', 
           position: 'relative',
-          bgcolor: 'rgba(0,0,0,0.7)'
+          bgcolor: THEME_COLORS.orange
         }}
       >
-        <Box 
-          component="img"
-          src={event.imageUrl} 
-          alt={event.title}
-          sx={{ 
-            width: '100%', 
-            height: '100%', 
-            objectFit: 'cover',
-            opacity: 0.7
-          }}
-        />
+        {/* Image component removed as requested */}
         <Box
           sx={{
             position: 'absolute',
@@ -539,6 +523,8 @@ const EventDetailsPage: React.FC = () => {
                   sx={{ mb: 2, py: 1.5 }}
                   onClick={() => router.push(`/events/${params.id}/feedback`)}
                   disabled={isUpcoming}
+                  color={isCompleted ? "primary" : "inherit"}
+                  variant={isCompleted ? "contained" : "outlined"}
                 >
                   Provide Feedback
                 </Button>
@@ -550,6 +536,15 @@ const EventDetailsPage: React.FC = () => {
             </Paper>
           </Grid>
         </Grid>
+
+        {/* Event Recommendations */}
+        <Box mt={4}>
+          <EventRecommendations 
+            currentEvent={event}
+            allEvents={[]}
+            maxRecommendations={1}
+          />
+        </Box>
       </Container>
       
       {/* Certificate Dialog */}

@@ -128,7 +128,7 @@ export default function CalendarPage() {
     }
   }, [currentMonth, events]);
   
-  // Function to calculate multi-day event layouts
+  // Function to calculate multi-day event layouts with better positioning
   const calculateEventLayouts = (rows: Date[][]) => {
     // Map to store layout information for each event
     const layoutMap: Record<string, any> = {};
@@ -153,8 +153,13 @@ export default function CalendarPage() {
       return aStart.getTime() - bStart.getTime();
     });
     
+    // Pre-calculate all week positions for each event
+    // This helps us track which position/lane the event should occupy
+    const eventPositions: Record<string, number> = {};
+    
     // Process all events and organize them by day and position
     sortedEvents.forEach(event => {
+      const eventId = event.id;
       const startDate = parseISO(event.startDate);
       const endDate = parseISO(event.endDate);
       const isMultiDay = !isSameDay(startDate, endDate);
@@ -180,6 +185,50 @@ export default function CalendarPage() {
         
         // If event appears in this row
         if (startCol !== -1 && endCol !== -1) {
+          // Create a week identifier to track positions within each week
+          const weekId = `week-${rowIndex}`;
+          
+          // Determine the vertical position for this event in this week
+          if (!eventPositions[`${eventId}-${weekId}`]) {
+            // Find the lowest available position
+            let position = 0;
+            let positionTaken = true;
+            
+            while (positionTaken) {
+              positionTaken = false;
+              
+              // Check if any existing event in this week uses this position
+              for (let col = startCol; col <= endCol; col++) {
+                const day = row[col];
+                const dayId = getDateId(day);
+                
+                if (layoutMap[dayId] && layoutMap[dayId].events) {
+                  for (const existingEvent of layoutMap[dayId].events) {
+                    // For multi-day events, check if positions clash
+                    if (existingEvent.position === position && 
+                        existingEvent.rowIndex === rowIndex &&
+                        (existingEvent.colIndex <= endCol && 
+                         existingEvent.colIndex + existingEvent.colSpan - 1 >= startCol)) {
+                      positionTaken = true;
+                      break;
+                    }
+                  }
+                }
+                
+                if (positionTaken) break;
+              }
+              
+              if (positionTaken) {
+                position++;
+              }
+            }
+            
+            eventPositions[`${eventId}-${weekId}`] = position;
+          }
+          
+          // Get the determined position
+          const position = eventPositions[`${eventId}-${weekId}`];
+          
           // This is a key change - for multi-day events, we only store at the start position
           // but with information about how many cells it spans
           if (isMultiDay) {
@@ -198,7 +247,8 @@ export default function CalendarPage() {
               colIndex: startCol,
               isStart: isSameDay(startDay, startDate),
               isEnd: isSameDay(row[endCol], endDate),
-              position: layoutMap[startDayId].events.length // Used for stacking events
+              position,
+              eventId // Store the event ID to help with positioning
             });
           } else {
             // For single day events, store them individually on their day
@@ -217,31 +267,33 @@ export default function CalendarPage() {
               colIndex: startCol,
               isStart: true,
               isEnd: true,
-              position: layoutMap[dayId].events.length // Used for stacking events
+              position,
+              eventId // Store the event ID to help with positioning
             });
           }
         }
       });
     });
     
-    setEventLayoutMap(layoutMap);
-  };
-
-  // Function to provide culturally relevant images
-  const getIndianEventImage = (category: string) => {
-    const images: Record<string, string> = {
-      'Education': 'https://images.unsplash.com/photo-1456243762991-9bc5d5e960db?q=80&w=1000&auto=format&fit=crop',
-      'Health': 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=1000&auto=format&fit=crop',
-      'Environment': 'https://images.unsplash.com/photo-1590274853856-f808e6a0c5f2?q=80&w=1000&auto=format&fit=crop',
-      'Community': 'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1000&auto=format&fit=crop',
-      'Cultural': 'https://images.unsplash.com/photo-1603206004639-22003d78a0d6?q=80&w=1000&auto=format&fit=crop',
-      'Sports': 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=1000&auto=format&fit=crop',
-      'Tech': 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1000&auto=format&fit=crop',
-      'Fundraising': 'https://images.unsplash.com/photo-1593113598332-cd59a93333c3?q=80&w=1000&auto=format&fit=crop',
-      'default': 'https://images.unsplash.com/photo-1524592714635-d77511a4834d?q=80&w=1000&auto=format&fit=crop',
-    };
+    // Sort events within each day by position for consistent rendering
+    Object.keys(layoutMap).forEach(dayId => {
+      if (layoutMap[dayId].events) {
+        layoutMap[dayId].events.sort((a: any, b: any) => {
+          // First priority: position (for stacking)
+          if (a.position !== b.position) return a.position - b.position;
+          
+          // Second priority: multi-day events first (longer span)
+          if (a.colSpan !== b.colSpan) return b.colSpan - a.colSpan;
+          
+          // Third priority: start date (earlier first)
+          const aStart = parseISO(a.event.startDate);
+          const bStart = parseISO(b.event.startDate);
+          return aStart.getTime() - bStart.getTime();
+        });
+      }
+    });
     
-    return images[category] || images['default'];
+    setEventLayoutMap(layoutMap);
   };
 
   const getDaysInMonth = (date: Date) => {
@@ -315,12 +367,30 @@ export default function CalendarPage() {
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     
     return (
-      <Box sx={{ width: '100%', overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+      <Box sx={{ 
+        width: '100%', 
+        overflowX: 'auto',
+        '& table': {
+          minWidth: '800px',
+          borderCollapse: 'separate',
+          borderSpacing: 0,
+          tableLayout: 'fixed'
+        }
+      }}>
+        <table>
           <thead>
             <tr>
               {dayNames.map((day) => (
-                <th key={day} style={{ padding: '8px', textAlign: 'center', fontWeight: 'bold' }}>
+                <th 
+                  key={day} 
+                  style={{ 
+                    padding: '12px 8px', 
+                    textAlign: 'center', 
+                    fontWeight: 'bold',
+                    borderBottom: '2px solid #e0e0e0',
+                    width: `${100/7}%`
+                  }}
+                >
                   {day}
                 </th>
               ))}
@@ -333,11 +403,19 @@ export default function CalendarPage() {
               const rowEvents: any[] = [];
               const occupiedCols = new Set<number>();
               
+              // Track the maximum number of events in any cell for this row
+              let maxEventsInCell = 0;
+              
               row.forEach((day, colIndex) => {
                 const dayId = format(day, 'yyyy-MM-dd');
                 const dayLayout = eventLayoutMap[dayId];
                 
                 if (dayLayout && dayLayout.events) {
+                  // Track how many events are in this cell
+                  if (dayLayout.events.length > maxEventsInCell) {
+                    maxEventsInCell = dayLayout.events.length;
+                  }
+                  
                   dayLayout.events.forEach((eventLayout: any) => {
                     // Only process events that start on this day
                     if (eventLayout.rowIndex === rowIndex && eventLayout.colIndex === colIndex) {
@@ -357,14 +435,11 @@ export default function CalendarPage() {
                 }
               });
               
-              // Sort events so multi-day events render first, then by position
-              rowEvents.sort((a, b) => {
-                if (b.colSpan !== a.colSpan) return b.colSpan - a.colSpan;
-                return a.position - b.position;
-              });
+              // Calculate cell height based on number of events (minimum 120px)
+              const cellHeight = Math.max(120, 30 + (maxEventsInCell * 28));
               
               return (
-                <tr key={`row-${rowIndex}`} style={{ height: '120px' }}>
+                <tr key={`row-${rowIndex}`} style={{ height: `${cellHeight}px` }}>
                   {row.map((day, colIndex) => {
                     const dayId = format(day, 'yyyy-MM-dd');
                     const isToday = isSameDay(day, new Date());
@@ -383,41 +458,63 @@ export default function CalendarPage() {
                         key={`day-${dayId}`}
                         colSpan={dayEvents.length > 0 && dayEvents[0].colSpan > 1 ? dayEvents[0].colSpan : 1}
                         style={{ 
-                          padding: '4px',
+                          padding: '8px',
                           verticalAlign: 'top',
-                          border: '1px solid #eee',
+                          borderTop: 'none',
+                          borderLeft: 'none',
+                          borderRight: '1px solid #e0e0e0',
+                          borderBottom: '1px solid #e0e0e0',
                           backgroundColor: isToday ? 'rgba(0, 92, 169, 0.1)' : 'white',
                           opacity: isCurrentMonth ? 1 : 0.5,
                           position: 'relative',
-                          height: '100%'
+                          height: '100%',
+                          minWidth: `${100/7}%`,
+                          boxSizing: 'border-box'
                         }}
                       >
-                        <div style={{ marginBottom: '4px' }}>
-                          <Typography variant="body2" sx={{ fontWeight: isToday ? 'bold' : 'normal' }}>
+                        <div style={{ 
+                          marginBottom: '8px', 
+                          display: 'flex',
+                          justifyContent: 'space-between'
+                        }}>
+                          <Typography 
+                            variant="body1" 
+                            sx={{ 
+                              fontWeight: isToday ? 'bold' : 'normal',
+                              color: isToday ? 'primary.main' : isCurrentMonth ? 'text.primary' : 'text.secondary',
+                              fontSize: '1rem'
+                            }}
+                          >
                             {format(day, 'd')}
                           </Typography>
                         </div>
                         
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <div style={{ 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          gap: '3px',
+                          maxHeight: 'calc(100% - 30px)',
+                          overflow: 'hidden'
+                        }}>
                           {dayEvents.map((eventLayout, i) => {
+                            if (i >= 3) return null; // Only show 3 events max before "more" indicator
+                            
                             const { event } = eventLayout;
-                            const startDate = parseISO(event.startDate);
-                            const endDate = parseISO(event.endDate);
                             
                             // Different colors for different categories
-                            const categoryColors: Record<string, { bg: string, text: string }> = {
-                              'Tech': { bg: '#E3F2FD', text: '#0D47A1' },
-                              'Education': { bg: '#E8F5E9', text: '#1B5E20' },
-                              'Sports': { bg: '#FFF3E0', text: '#E65100' },
-                              'Cultural': { bg: '#F3E5F5', text: '#7B1FA2' },
-                              'Community': { bg: '#E1F5FE', text: '#01579B' },
-                              'Health': { bg: '#FFEBEE', text: '#B71C1C' },
-                              'Environment': { bg: '#E0F2F1', text: '#004D40' },
-                              'Fundraising': { bg: '#FFF8E1', text: '#FF6F00' }
+                            const categoryColors: Record<string, { bg: string, text: string, border: string }> = {
+                              'Tech': { bg: '#E3F2FD', text: '#0D47A1', border: '#90CAF9' },
+                              'Education': { bg: '#E8F5E9', text: '#1B5E20', border: '#A5D6A7' },
+                              'Sports': { bg: '#FFF3E0', text: '#E65100', border: '#FFCC80' },
+                              'Cultural': { bg: '#F3E5F5', text: '#7B1FA2', border: '#CE93D8' },
+                              'Community': { bg: '#E1F5FE', text: '#01579B', border: '#81D4FA' },
+                              'Health': { bg: '#FFEBEE', text: '#B71C1C', border: '#EF9A9A' },
+                              'Environment': { bg: '#E0F2F1', text: '#004D40', border: '#80CBC4' },
+                              'Fundraising': { bg: '#FFF8E1', text: '#FF6F00', border: '#FFE082' }
                             };
                             
                             // Get color based on category, or use default if category is unknown
-                            const defaultColor = { bg: '#ECEFF1', text: '#37474F' };
+                            const defaultColor = { bg: '#ECEFF1', text: '#37474F', border: '#B0BEC5' };
                             const eventColor = categoryColors[event.category] || defaultColor;
                             
                             // Multi-day events get rounded corners only at start/end
@@ -434,7 +531,7 @@ export default function CalendarPage() {
                                 style={{
                                   backgroundColor: eventColor.bg,
                                   color: eventColor.text,
-                                  padding: '4px 6px',
+                                  padding: '4px 8px',
                                   borderRadius,
                                   fontSize: '0.75rem',
                                   overflow: 'hidden',
@@ -443,35 +540,47 @@ export default function CalendarPage() {
                                   cursor: 'pointer',
                                   fontWeight: 500,
                                   width: '100%',
-                                  marginBottom: '2px',
-                                  borderLeft: eventLayout.colSpan > 1 ? `3px solid ${eventColor.text}` : 'none',
-                                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                                  border: `1px solid ${eventColor.border}`,
+                                  borderLeft: eventLayout.colSpan > 1 ? `4px solid ${eventColor.text}` : `1px solid ${eventColor.border}`,
+                                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                  position: 'relative',
+                                  zIndex: 10 - i, // Higher events appear on top
+                                  transition: 'transform 0.1s, box-shadow 0.1s',
+                                  ':hover': {
+                                    transform: 'translateY(-1px)',
+                                    boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                                  }
                                 }}
                               >
                                 {event.title}
                               </div>
                             );
                           })}
+                          
+                          {/* More events indicator */}
+                          {dayEvents.length > 3 && (
+                            <div
+                              style={{
+                                color: 'var(--mui-palette-primary-main)',
+                                fontSize: '0.75rem',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                marginTop: '2px',
+                                textAlign: 'center',
+                                padding: '2px',
+                                backgroundColor: 'rgba(0,0,0,0.05)',
+                                borderRadius: '4px'
+                              }}
+                              onClick={() => {
+                                if (dayEvents.length > 0) {
+                                  handleEventClick(dayEvents[3].event);
+                                }
+                              }}
+                            >
+                              +{dayEvents.length - 3} more
+                            </div>
+                          )}
                         </div>
-                        
-                        {/* More events indicator */}
-                        {dayEvents.length > 3 && (
-                          <div
-                            style={{
-                              color: 'var(--mui-palette-primary-main)',
-                              fontSize: '0.75rem',
-                              cursor: 'pointer',
-                              marginTop: '2px'
-                            }}
-                            onClick={() => {
-                              if (dayEvents.length > 0) {
-                                handleEventClick(dayEvents[3].event);
-                              }
-                            }}
-                          >
-                            +{dayEvents.length - 3} more
-                          </div>
-                        )}
                       </td>
                     );
                   })}
@@ -567,14 +676,6 @@ export default function CalendarPage() {
                 />
               </DialogTitle>
               <DialogContent dividers>
-                <Box sx={{ height: 200, mb: 2, overflow: 'hidden', borderRadius: 1 }}>
-                  <img 
-                    src={selectedEvent.imageUrl} 
-                    alt={selectedEvent.title}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                </Box>
-                
                 <Grid container spacing={2} sx={{ mb: 2 }}>
                   <Grid item xs={6}>
                     <Typography variant="subtitle2" color="text.secondary">

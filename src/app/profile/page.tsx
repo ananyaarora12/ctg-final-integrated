@@ -304,13 +304,6 @@ const EventCard = ({ event, status }: { event: any, status: string }) => {
         boxShadow: 3
       }
     }}>
-      <CardMedia
-        component="img"
-        height="140"
-        image={imageError ? getDefaultImage() : (event.imageUrl || event.image || getDefaultImage())}
-        alt={event.title}
-        onError={() => setImageError(true)}
-      />
       <CardContent sx={{ flexGrow: 1 }}>
         <Typography gutterBottom variant="h6" component="div" noWrap>
           {event.title || "Untitled Event"}

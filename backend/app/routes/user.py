@@ -3,6 +3,7 @@ from app.models.user import get_user_by_id, update_user_profile, serialize_user
 from app.models.event import get_event_by_id, serialize_event
 from app.utils.auth_utils import token_required, admin_required
 from bson import ObjectId
+from datetime import datetime
 
 user_bp = Blueprint('user', __name__)
 
@@ -94,6 +95,99 @@ def get_user(current_user, user_id):
         return jsonify({'error': 'User not found'}), 404
     
     return jsonify(serialize_user(user)), 200
+
+# Leaderboard route
+@user_bp.route('/leaderboard', methods=['GET'])
+@token_required
+def get_leaderboard(current_user):
+    # Get time period from query parameters
+    period = request.args.get('period', 'all-time')
+    
+    # Define query based on role
+    query = {'role': 'volunteer'}
+    
+    # Fetch volunteers from the database
+    volunteers = list(db.users.find(query))
+    
+    # Sort volunteers by points in descending order
+    sorted_volunteers = sorted(
+        volunteers, 
+        key=lambda x: x.get('profile', {}).get('points', 0), 
+        reverse=True
+    )
+    
+    # Limit to top 20 volunteers
+    top_volunteers = sorted_volunteers[:20]
+    
+    # Serialize volunteers
+    leaderboard_data = []
+    for i, volunteer in enumerate(top_volunteers):
+        user_data = serialize_user(volunteer)
+        # Add additional leaderboard-specific fields
+        user_data['rank'] = i + 1
+        
+        # Get profile data
+        profile = volunteer.get('profile', {})
+        
+        # Map to expected format
+        user_data['displayName'] = volunteer['name']
+        user_data['points'] = profile.get('points', 0)
+        user_data['level'] = calculate_level(profile.get('points', 0))
+        user_data['nextLevelPoints'] = calculate_next_level_points(profile.get('points', 0))
+        user_data['hoursVolunteered'] = profile.get('hours_contributed', 0)
+        user_data['eventsAttended'] = profile.get('events_participated', [])
+        user_data['eventsRegistered'] = profile.get('events_participated', [])  # Using same field for now
+        user_data['badgesEarned'] = profile.get('badges', [])
+        
+        # Create empty arrays for badges and category distributions if not present
+        user_data['badges'] = []
+        for badge_id in profile.get('badges', []):
+            user_data['badges'].append({
+                'id': badge_id,
+                'name': badge_id.capitalize(),
+                'description': f'Earned the {badge_id} badge',
+                'icon': 'award',
+                'earnedDate': datetime.utcnow().isoformat()
+            })
+        
+        # Add stats
+        user_data['stats'] = {
+            'totalEvents': len(profile.get('events_participated', [])),
+            'totalHours': profile.get('hours_contributed', 0),
+            'categoryDistribution': [],
+            'monthlyActivity': []
+        }
+        
+        leaderboard_data.append(user_data)
+    
+    return jsonify(leaderboard_data), 200
+
+# Helper functions for leaderboard
+def calculate_level(points):
+    """Calculate level based on points"""
+    if points < 100:
+        return 1
+    elif points < 250:
+        return 2
+    elif points < 500:
+        return 3
+    elif points < 1000:
+        return 4
+    else:
+        return 5
+
+def calculate_next_level_points(points):
+    """Calculate points needed for next level"""
+    if points < 100:
+        return 100
+    elif points < 250:
+        return 250
+    elif points < 500:
+        return 500
+    elif points < 1000:
+        return 1000
+    else:
+        return 2000
 
 # Import db at the end to avoid circular import
 from app import db 

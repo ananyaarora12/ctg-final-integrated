@@ -95,17 +95,17 @@ const progressData = [
 // Hero carousel images
 const heroImages = [
   {
-    url: '/images/education.jpg',
+    url: '/images/education.png',
     title: 'Education for the Disabled',
     subtitle: 'Providing equal education opportunities to people with disabilities',
   },
   {
-    url: '/images/sports.jpg',
+    url: '/images/blind-cricket.jpg',
     title: 'Blind Cricket Initiative',
     subtitle: 'Promoting sports as a rightful pursuit for people with disabilities',
   },
   {
-    url: '/images/arts.jpg',
+    url: '/images/arts.png',
     title: 'Arts & Culture Programs',
     subtitle: 'Supporting disabled artists in music and performing arts',
   }
@@ -125,7 +125,6 @@ const initiatives = [
     title: 'Education', 
     icon: <SchoolIcon sx={{ fontSize: 60, color: EXTENDED_COLORS.primary }} />,
     description: 'Supporting accessible education for visually impaired students through teaching assistance and resource development.',
-    image: '/images/education.jpg'
   },
   { 
     title: 'Livelihood', 
@@ -137,7 +136,7 @@ const initiatives = [
     title: 'Sports', 
     icon: <GroupsIcon sx={{ fontSize: 60, color: EXTENDED_COLORS.primary }} />,
     description: 'Establishing cricket for the blind and other sports activities to build confidence and abilities.',
-    image: '/images/sports.jpg'
+    image: '/images/.jpg'
   },
   { 
     title: 'Arts & Culture', 
@@ -153,7 +152,7 @@ const testimonials = [
     quote: "I believe in building a society where people with disabilities are potential tax-payers but not dole recipients.",
     name: "Dr. Mahantesh G Kivadasannavar",
     role: "Founder Chairman – Samarthanam International",
-    avatar: "/images/founder.jpg"
+    avatar: "images/mahantesh.png"
   },
   {
     quote: "Samarthanam has provided me opportunities to gain new skills that have transformed my life. I'm now more confident and independent.",
@@ -228,12 +227,7 @@ const filterFeaturedEvents = (events: any[], tab: number) => {
   switch(tab) {
     case 0: // Upcoming
       return events.filter(event => event.status.toLowerCase() === 'upcoming').slice(0, 1);
-    case 1: // Trending
-      // For trending, we'll use events with high participation rates
-      return events
-        .filter(event => (event.currentParticipants / event.participantsLimit) > 0.7)
-        .slice(0, 1);
-    case 2: // New
+    case 1: // New
       // For new events, we'll use the most recent upcoming events
       return events
         .filter(event => event.status.toLowerCase() === 'upcoming')
@@ -708,7 +702,6 @@ export default function HomePage() {
             }}
           >
             <Tab label="Upcoming" />
-            <Tab label="Trending" />
             <Tab label="New" />
           </Tabs>
           
@@ -734,16 +727,6 @@ export default function HomePage() {
                     borderRadius: 3,
                   }}
                 >
-                  <CardMedia
-                    component="img"
-                    sx={{ 
-                      width: { xs: '100%', md: '40%' },
-                      height: { xs: '200px', md: '400px' },
-                      objectFit: 'cover'
-                    }}
-                    image={event.image || '/images/event-placeholder.jpg'}
-                    alt={event.title}
-                  />
                   <CardContent sx={{ 
                     flex: 1, 
                     p: { xs: 2, md: 4 },
@@ -897,192 +880,6 @@ export default function HomePage() {
           </Box>
         </Container>
       </Box>
-      
-      {/* Upcoming Events Grid */}
-      <Container maxWidth="lg" sx={{ py: 8 }}>
-        <Box sx={{ position: 'relative', mb: 4, display: 'inline-block', mx: 'auto', width: '100%', textAlign: 'center' }}>
-          <Typography
-            variant="h3"
-            component="h2"
-            align="center"
-            sx={{ 
-              mb: 1,
-              fontWeight: 'bold',
-              color: EXTENDED_COLORS.secondary
-            }}
-          >
-            Upcoming Events
-          </Typography>
-          <Box 
-            sx={{ 
-              width: '60px', 
-              height: '4px', 
-              backgroundColor: EXTENDED_COLORS.primary,
-              mx: 'auto',
-              mb: 3
-            }}
-          />
-        </Box>
-        
-        <Typography
-          variant="h6"
-          component="p"
-          align="center"
-          color={EXTENDED_COLORS.dark}
-          sx={{ mb: 6, maxWidth: '800px', mx: 'auto' }}
-        >
-          Join us for these exciting upcoming volunteer opportunities
-        </Typography>
-        
-        {loadingEvents ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : events.length === 0 ? (
-          <Typography variant="h5" align="center" sx={{ my: 4 }}>
-            No upcoming events available
-          </Typography>
-        ) : (
-          <Grid container spacing={3}>
-            {events
-              .filter(event => event.status.toLowerCase() === 'upcoming')
-              .slice(0, 6)
-              .map(event => (
-                <Grid item xs={12} sm={6} md={4} key={event.id}>
-                  <Card 
-                    sx={{ 
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      borderRadius: 3,
-                      boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-                      overflow: 'hidden',
-                      transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                      '&:hover': {
-                        transform: 'translateY(-8px)',
-                        boxShadow: '0 12px 25px rgba(0,0,0,0.15)',
-                      },
-                    }}
-                  >
-                    <CardActionArea component={Link} href={`/events/${event.id}`}>
-                      <Box sx={{ position: 'relative' }}>
-                        <CardMedia
-                          component="img"
-                          height="180"
-                          image={event.image || '/images/event-placeholder.jpg'}
-                          alt={event.title}
-                        />
-                        <Chip 
-                          label={event.category}
-                          size="small"
-                          sx={{ 
-                            position: 'absolute',
-                            top: 16,
-                            right: 16,
-                            bgcolor: EXTENDED_COLORS.primary,
-                            color: EXTENDED_COLORS.light,
-                            fontWeight: 500,
-                          }}
-                        />
-                      </Box>
-                      
-                      <CardContent sx={{ flexGrow: 1, p: 3 }}>
-                        <Typography gutterBottom variant="h6" component="h3" sx={{ fontWeight: 700 }}>
-                          {event.title}
-                        </Typography>
-                        
-                        <Box 
-                          sx={{ 
-                            display: 'flex', 
-                            alignItems: 'center',
-                            mb: 1
-                          }}
-                        >
-                          <CalendarTodayIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
-                          <Typography variant="body2" color="text.secondary">
-                            {new Date(event.startDate).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric'
-                            })}
-                          </Typography>
-                        </Box>
-                        
-                        <Box 
-                          sx={{ 
-                            display: 'flex', 
-                            alignItems: 'center',
-                            mb: 2
-                          }}
-                        >
-                          <LocationOnIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
-                          <Typography variant="body2" color="text.secondary" noWrap>
-                            {event.location}
-                          </Typography>
-                        </Box>
-                        
-                        <Typography 
-                          variant="body2" 
-                          color="text.secondary"
-                          sx={{
-                            mb: 2,
-                            overflow: 'hidden',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                          }}
-                        >
-                          {event.description}
-                        </Typography>
-                        
-                        <Box 
-                          sx={{ 
-                            display: 'flex', 
-                            justifyContent: 'space-between',
-                            mt: 'auto'
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <PeopleIcon sx={{ fontSize: 16, mr: 0.5, color: 'text.secondary' }} />
-                            <Typography variant="body2" color="text.secondary">
-                              {event.currentParticipants}/{event.participantsLimit}
-                            </Typography>
-                          </Box>
-                          
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <StarIcon sx={{ fontSize: 16, mr: 0.5, color: EXTENDED_COLORS.gold }} />
-                            <Typography variant="body2" color="text.secondary">
-                              {event.pointsAwarded} points
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </CardContent>
-                    </CardActionArea>
-                  </Card>
-                </Grid>
-              ))
-            }
-          </Grid>
-        )}
-        
-        {events.length > 0 && (
-          <Box sx={{ mt: 4, textAlign: 'center' }}>
-            <Button 
-              variant="contained"
-              component={Link}
-              href="/events"
-              endIcon={<ArrowForwardIcon />}
-              sx={{ 
-                px: 4,
-                py: 1.2,
-                borderRadius: 8,
-              }}
-            >
-              View All Events
-            </Button>
-          </Box>
-        )}
-      </Container>
       
       {/* Volunteer Progress Chart */}
       <Container maxWidth="lg" sx={{ py: 8 }}>

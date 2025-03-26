@@ -138,29 +138,7 @@ const mockMessages = [
   },
 ];
 
-// Messaging stats
-const messagingStats = [
-  { 
-    title: 'Total Messages', 
-    count: 342, 
-    icon: <MessageIcon sx={{ fontSize: 40, color: THEME_COLORS.orange }} /> 
-  },
-  { 
-    title: 'Unread Messages', 
-    count: 18, 
-    icon: <EmailIcon sx={{ fontSize: 40, color: '#2196F3' }} /> 
-  },
-  { 
-    title: 'Announcements', 
-    count: 56, 
-    icon: <CampaignIcon sx={{ fontSize: 40, color: '#4CAF50' }} /> 
-  },
-  { 
-    title: 'Recipient Groups', 
-    count: 12, 
-    icon: <GroupIcon sx={{ fontSize: 40, color: '#9C27B0' }} /> 
-  },
-];
+// Stats removed: Total Messages, Unread Messages, Announcements, Recipient Groups
 
 // Interface for TabPanel props
 interface TabPanelProps {
@@ -387,37 +365,6 @@ export default function MessagingDashboard() {
             Manage all communications with volunteers and participants.
           </Typography>
         </Box>
-
-        {/* Stats Cards */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          {messagingStats.map((stat, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
-              <Card 
-                sx={{ 
-                  height: '100%',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
-                  transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
-                  '&:hover': {
-                    transform: 'translateY(-5px)',
-                    boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
-                  }
-                }}
-              >
-                <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                  <Box sx={{ mb: 2 }}>
-                    {stat.icon}
-                  </Box>
-                  <Typography variant="h4" component="div" fontWeight="bold">
-                    {stat.count}
-                  </Typography>
-                  <Typography variant="body1" color="text.secondary">
-                    {stat.title}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
 
         {/* Main content */}
         <Paper sx={{ mb: 4 }}>

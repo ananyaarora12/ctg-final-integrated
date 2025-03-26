@@ -114,13 +114,69 @@ export default function DonatePage() {
 
   // Fetch active events (upcoming and ongoing)
   useEffect(() => {
-    // In a real app, this would be an API call
-    // For now, filter from the sample events
-    const filteredEvents = sampleEvents.filter(
-      event => event.status === 'upcoming' || event.status === 'ongoing'
-    );
-    setActiveEvents(filteredEvents);
+    const fetchActiveEvents = async () => {
+      try {
+        setLoading(true);
+        const apiClient = (await import('../../utils/api')).default;
+        const response = await apiClient.events.getAllEvents();
+        
+        // Map backend event structure to frontend EventData structure
+        // and filter for only upcoming and ongoing events
+        const allEvents = response.data.events.map((event: any) => {
+          // Calculate the real-time status based on dates
+          const calculatedStatus = calculateEventStatus(event.start_date, event.end_date);
+          
+          return {
+            id: event.event_id,
+            title: event.event_name,
+            description: event.description,
+            image: event.event_image || 'https://source.unsplash.com/random/400x200?volunteer',
+            startDate: event.start_date,
+            endDate: event.end_date,
+            location: event.location,
+            category: event.category,
+            status: calculatedStatus,
+            participantsLimit: event.participant_limit,
+            currentParticipants: event.participants ? event.participants.length : 0,
+            pointsAwarded: event.points_awarded,
+          };
+        });
+        
+        // Filter for active events (upcoming and ongoing)
+        const activeEventsList = allEvents.filter(
+          event => event.status === 'upcoming' || event.status === 'ongoing'
+        );
+        
+        setActiveEvents(activeEventsList);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching events:', error);
+        // Fallback to sample data if API fails
+        const filteredEvents = sampleEvents.filter(
+          event => event.status === 'upcoming' || event.status === 'ongoing'
+        );
+        setActiveEvents(filteredEvents);
+        setLoading(false);
+      }
+    };
+    
+    fetchActiveEvents();
   }, []);
+
+  // Calculate event status helper function
+  const calculateEventStatus = (startDate: string, endDate: string): string => {
+    const now = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (now < start) {
+      return 'upcoming';
+    } else if (now >= start && now <= end) {
+      return 'ongoing';
+    } else {
+      return 'completed';
+    }
+  };
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
@@ -161,15 +217,66 @@ export default function DonatePage() {
     if (event.target.value) {
       const selectedEventObj = activeEvents.find(e => e.id === event.target.value);
       if (selectedEventObj) {
-        // Find matching donation category or default to first category
-        const matchingCategory = donationOptions.find(
-          option => option.id.toLowerCase() === selectedEventObj.category.toLowerCase()
+        // Find matching donation category based on event category
+        const eventCategory = selectedEventObj.category.toLowerCase();
+        
+        // Try to find an exact match first
+        let matchingCategory = donationOptions.find(
+          option => option.id.toLowerCase() === eventCategory
         );
         
+        // If no exact match, try to find a partial match
+        if (!matchingCategory) {
+          // Map common categories to donation options
+          const categoryMappings: Record<string, string> = {
+            'education': 'education',
+            'school': 'education',
+            'teaching': 'education',
+            'learning': 'education',
+            'career': 'education',
+            'workshop': 'education',
+            'training': 'education',
+            
+            'livelihood': 'livelihood',
+            'job': 'livelihood',
+            'employment': 'livelihood',
+            'work': 'livelihood',
+            'skills': 'livelihood',
+            'business': 'livelihood',
+            
+            'art': 'arts',
+            'music': 'arts',
+            'culture': 'arts',
+            'dance': 'arts',
+            'creative': 'arts',
+            'performance': 'arts',
+            
+            'sports': 'sports',
+            'athletics': 'sports',
+            'games': 'sports',
+            'physical': 'sports',
+            'fitness': 'sports',
+            
+            'nutrition': 'nutrition',
+            'food': 'nutrition',
+            'meal': 'nutrition',
+            'health': 'nutrition',
+            'cooking': 'nutrition',
+          };
+          
+          // Check if the event category matches any of our mappings
+          for (const [key, value] of Object.entries(categoryMappings)) {
+            if (eventCategory.includes(key)) {
+              matchingCategory = donationOptions.find(option => option.id === value);
+              break;
+            }
+          }
+        }
+        
+        // If still no match found, default to first category
         if (matchingCategory) {
           setSelectedCategory(matchingCategory.id);
         } else {
-          // If no direct match, default to education or first available category
           setSelectedCategory(donationOptions[0].id);
         }
         
@@ -357,12 +464,6 @@ export default function DonatePage() {
                       
                       {selectedEventDetails && (
                         <Card variant="outlined" sx={{ mb: 3, mt: 2 }}>
-                          <CardMedia
-                            component="img"
-                            height="140"
-                            image={selectedEventDetails.image}
-                            alt={selectedEventDetails.title}
-                          />
                           <CardContent>
                             <Typography gutterBottom variant="h6" component="div">
                               {selectedEventDetails.title}

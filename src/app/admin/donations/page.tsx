@@ -39,19 +39,20 @@ import { RootState } from '../../../redux/store';
 import { THEME_COLORS } from '../../../components/layout/Layout';
 
 // Icons
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import SearchIcon from '@mui/icons-material/Search';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ReceiptIcon from '@mui/icons-material/Receipt';
-import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
-import EventIcon from '@mui/icons-material/Event';
 import DownloadIcon from '@mui/icons-material/Download';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EmailIcon from '@mui/icons-material/Email';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import TrendingDownIcon from '@mui/icons-material/TrendingDown';
+// Removed unused icons that were only used in stats cards
+// import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+// import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+// import EventIcon from '@mui/icons-material/Event';
+// import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+// import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 
 // Mock donation data
 const mockDonations = [
@@ -194,38 +195,6 @@ const mockDonations = [
     location: 'Chennai',
     event: 'None',
     type: 'Individual'
-  },
-];
-
-// Stats for the dashboard
-const donationStats = [
-  { 
-    title: 'Total Donations', 
-    value: '₹3,55,000', 
-    icon: <MonetizationOnIcon sx={{ fontSize: 40, color: THEME_COLORS.orange }} />,
-    change: '+15%',
-    trending: true
-  },
-  { 
-    title: 'Donors', 
-    value: '246', 
-    icon: <PeopleAltIcon sx={{ fontSize: 40, color: '#4CAF50' }} />,
-    change: '+8%',
-    trending: true
-  },
-  { 
-    title: 'Average Donation', 
-    value: '₹9,450', 
-    icon: <TrendingUpIcon sx={{ fontSize: 40, color: '#2196F3' }} />,
-    change: '+5%',
-    trending: true
-  },
-  { 
-    title: 'Event Donations', 
-    value: '₹1,85,000', 
-    icon: <EventIcon sx={{ fontSize: 40, color: '#9C27B0' }} />,
-    change: '+20%',
-    trending: true
   },
 ];
 
@@ -410,48 +379,6 @@ export default function DonationsManagement() {
             View and manage all donations received by your organization.
           </Typography>
         </Box>
-
-        {/* Stats Cards */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          {donationStats.map((stat, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
-              <Card 
-                sx={{ 
-                  height: '100%',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
-                  transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
-                  '&:hover': {
-                    transform: 'translateY(-5px)',
-                    boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
-                  }
-                }}
-              >
-                <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                  <Box sx={{ mb: 2 }}>
-                    {stat.icon}
-                  </Box>
-                  <Typography variant="h4" component="div" fontWeight="bold">
-                    {stat.value}
-                  </Typography>
-                  <Typography variant="body1" color="text.secondary">
-                    {stat.title}
-                  </Typography>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    mt: 1, 
-                    color: stat.trending ? '#4CAF50' : '#F44336' 
-                  }}>
-                    {stat.trending ? <ArrowUpwardIcon fontSize="small" /> : <ArrowDownwardIcon fontSize="small" />}
-                    <Typography variant="body2" fontWeight="medium">
-                      {stat.change} this month
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
 
         {/* Main content */}
         <Paper sx={{ mb: 4 }}>

@@ -153,19 +153,33 @@ const userSlice = createSlice({
           return;
         }
         
-        // Update profile if it exists
-        if (state.profile && Array.isArray(state.profile.eventsRegistered)) {
+        // Update profile if it exists - ensure eventsRegistered is always an array
+        if (state.profile) {
+          // Initialize eventsRegistered as an empty array if it doesn't exist
+          if (!state.profile.eventsRegistered) {
+            state.profile.eventsRegistered = [];
+          }
+          
+          // Add the event ID if it's not already in the array
           if (!state.profile.eventsRegistered.includes(eventId)) {
             state.profile.eventsRegistered.push(eventId);
           }
         }
         
-        // Update selectedProfile if it exists
-        if (state.selectedProfile && Array.isArray(state.selectedProfile.eventsRegistered)) {
+        // Update selectedProfile if it exists - ensure eventsRegistered is always an array
+        if (state.selectedProfile) {
+          // Initialize eventsRegistered as an empty array if it doesn't exist
+          if (!state.selectedProfile.eventsRegistered) {
+            state.selectedProfile.eventsRegistered = [];
+          }
+          
+          // Add the event ID if it's not already in the array
           if (!state.selectedProfile.eventsRegistered.includes(eventId)) {
             state.selectedProfile.eventsRegistered.push(eventId);
           }
         }
+        
+        console.log('Registration successful for event:', eventId);
       } catch (error) {
         console.error('Error in registerForEventSuccess reducer:', error);
         state.error = 'Failed to update registration';
